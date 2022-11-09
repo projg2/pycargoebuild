@@ -7,11 +7,6 @@ from pathlib import Path
 from pycargoebuild.cargo import get_crates, get_package_metadata
 from pycargoebuild.ebuild import get_ebuild
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
 
 def main(prog_name: str, *argv: str) -> int:
     argp = argparse.ArgumentParser(prog=os.path.basename(prog_name))
