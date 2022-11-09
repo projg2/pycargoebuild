@@ -1,0 +1,21 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pycargoebuild"
+authors = [{name = "Michał Górny", email = "mgorny@gentoo.org"}]
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: MIT License"]
+dynamic = ["version", "description"]
+requires-python = ">=3.8"
+dependencies = [
+    "license_expression",
+    "tomli >= 1.2.3; python_version < '3.11'",
+]
+
+[project.scripts]
+pycargoebuild = "pycargoebuild.__main__:entry_point"
+
+[project.urls]
+Home = "https://github.com/mgorny/pycargoebuild/"
