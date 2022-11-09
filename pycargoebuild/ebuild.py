@@ -9,6 +9,7 @@ from pathlib import Path
 import license_expression
 
 from pycargoebuild import __version__
+from pycargoebuild.cargo import PackageMetadata, get_package_metadata
 from pycargoebuild.license import spdx_to_ebuild
 
 if sys.version_info >= (3, 11):
@@ -45,30 +46,25 @@ KEYWORDS="~amd64"
 """
 
 
-def cargo_to_spdx(license_str: str) -> str:
-    """
-    Convert deprecated Cargo license string to SPDX-2.0, if necessary.
-    """
-    return license_str.replace("/", " OR ")
-
-
-def get_ebuild(cargo_toml: dict, cargo_lock: dict, distdir: Path) -> str:
+def get_ebuild(pkg_meta: PackageMetadata,
+               cargo_lock: dict,
+               distdir: Path,
+               ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
     """
 
     # get package's license
-    pkgmeta = cargo_toml["package"]
     spdx = license_expression.get_spdx_licensing()
-    assert "license_file" not in pkgmeta
-    pkg_license = pkgmeta["license"]
-    parsed_pkg_license = spdx.parse(pkg_license, validate=True, strict=True)
+    parsed_pkg_license = spdx.parse(pkg_meta.license,
+                                    validate=True,
+                                    strict=True)
 
     # get crate list from Cargo.lock
     assert cargo_lock["version"] == 3
     deps = [(p["name"], p["version"], p["checksum"])
             for p in cargo_lock["package"]
-            if p["name"] != pkgmeta["name"]]
+            if p["name"] != pkg_meta.name]
     crates = "\n".join(f"\t{p}-{v}" for p, v, _ in deps)
 
     # fetch all crates, verify their checksums and grab licenses
@@ -92,22 +88,22 @@ def get_ebuild(cargo_toml: dict, cargo_lock: dict, distdir: Path) -> str:
                 f"checksum mismatch for {path}, got: {hasher.hexdigest()}, "
                 f"exp: {csum}")
         with tarfile.open(path, "r:gz") as crate:
-            with crate.extractfile(f"{p}-{v}/Cargo.toml") as tarf:
-                crate_toml = tomllib.load(tarf)
-                assert "license_file" not in crate_toml["package"]
-                crate_licenses.add(
-                    cargo_to_spdx(crate_toml["package"]["license"]))
+            tarf = crate.extractfile(f"{p}-{v}/Cargo.toml")
+            assert tarf is not None
+            with tarf:
+                crate_metadata = get_package_metadata(tarf)
+                crate_licenses.add(crate_metadata.license)
 
     # build list of (additional) crate licenses
-    crate_licenses.discard(pkg_license)
+    crate_licenses.discard(pkg_meta.license)
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
     parsed_license = spdx.parse(combined_license, validate=True, strict=True)
     final_license = parsed_license.simplify()
 
     return EBUILD_TEMPLATE.format(crates=crates,
                                   crate_licenses=spdx_to_ebuild(final_license),
-                                  description=pkgmeta.get("description", ""),
-                                  homepage=pkgmeta["homepage"],
+                                  description=pkg_meta.description or "",
+                                  homepage=pkg_meta.homepage or "",
                                   pkg_license=spdx_to_ebuild(
                                       parsed_pkg_license),
                                   prog_version=__version__,

@@ -4,6 +4,7 @@ import sys
 
 from pathlib import Path
 
+from pycargoebuild.cargo import get_package_metadata
 from pycargoebuild.ebuild import get_ebuild
 
 if sys.version_info >= (3, 11):
@@ -30,7 +31,7 @@ def main(prog_name, *args):
     args = argp.parse_args(args)
 
     with open(args.directory / "Cargo.toml", "rb") as f:
-        cargo_toml = tomllib.load(f)
+        pkg_meta = get_package_metadata(f)
     with open(args.directory / "Cargo.lock", "rb") as f:
         cargo_lock = tomllib.load(f)
 
@@ -40,11 +41,10 @@ def main(prog_name, *args):
         tree = trees[max(trees)]
         args.distdir = Path(tree["porttree"].settings["DISTDIR"])
 
-    ebuild = get_ebuild(cargo_toml, cargo_lock, distdir=args.distdir)
-    pkgmeta = cargo_toml["package"]
+    ebuild = get_ebuild(pkg_meta, cargo_lock, distdir=args.distdir)
 
-    outfile = Path(args.output.format(name=pkgmeta["name"],
-                                      version=pkgmeta["version"]))
+    outfile = Path(args.output.format(name=pkg_meta.name,
+                                      version=pkg_meta.version))
     with open(outfile, "w", encoding="utf-8") as f:
         f.write(ebuild)
 
