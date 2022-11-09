@@ -13,9 +13,9 @@ from .testdata import CRATES
 
 @pytest.fixture
 def mock_fetch():
-    with (unittest.mock.patch.object(Path, "mkdir") as mkdir_mock,
-          unittest.mock.patch.object(subprocess, "check_call") as call_mock):
-        yield call_mock
+    with unittest.mock.patch.object(subprocess, "check_call") as call_mock:
+        with unittest.mock.patch.object(Path, "mkdir") as mkdir_mock:
+            yield call_mock
     mkdir_mock.assert_called()
 
 
