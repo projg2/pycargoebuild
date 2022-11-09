@@ -34,6 +34,7 @@ def verify_crates(crates: Crates, distdir: Path) -> None:
                 if rd == 0:
                     break
                 hasher.update(mv[:rd])
-            assert hasher.hexdigest() == crate.checksum, (
-                f"checksum mismatch for {path}, got: {hasher.hexdigest()}, "
-                f"exp: {crate.checksum}")
+            if hasher.hexdigest() != crate.checksum:
+                raise RuntimeError(
+                    f"checksum mismatch for {path}, got: "
+                    f"{hasher.hexdigest()}, exp: {crate.checksum}")

@@ -60,7 +60,8 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
         assert path.name.endswith(".crate")
         with tarfile.open(path, "r:gz") as crate:
             tarf = crate.extractfile(f"{path.name[:-6]}/Cargo.toml")
-            assert tarf is not None
+            if tarf is None:
+                raise RuntimeError(f"Cargo.toml not found in {path}")
             with tarf:
                 # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
                 # expects BinaryIO -- but it actually is compatible

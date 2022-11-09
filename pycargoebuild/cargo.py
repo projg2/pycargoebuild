@@ -43,7 +43,9 @@ def cargo_to_spdx(license_str: str) -> str:
 def get_crates(f: typing.BinaryIO, exclude: typing.Container[str]) -> Crates:
     """Read crate list from the open ``Cargo.lock`` file"""
     cargo_lock = tomllib.load(f)
-    assert cargo_lock["version"] == 3
+    if cargo_lock["version"] != 3:
+        raise NotImplementedError(
+            f"Cargo.lock version '{cargo_lock['version']} unsupported")
     return [Crate(name=p["name"], version=p["version"], checksum=p["checksum"])
             for p in cargo_lock["package"]
             if p["name"] not in exclude]
@@ -53,7 +55,8 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     """Read package from the open ``Cargo.toml`` file"""
     cargo_toml = tomllib.load(f)
     pkg_meta = cargo_toml["package"]
-    assert "license_file" not in pkg_meta  # TODO
+    if "license_file" in pkg_meta:
+        raise NotImplementedError("license_file metadata key not supported")
     return PackageMetadata(name=pkg_meta["name"],
                            version=pkg_meta["version"],
                            license=cargo_to_spdx(pkg_meta["license"]),
