@@ -12,6 +12,15 @@ class Crate(typing.NamedTuple):
     version: str
     checksum: str
 
+    @property
+    def filename(self) -> str:
+        return f"{self.name}-{self.version}.crate"
+
+    @property
+    def crates_io_url(self) -> str:
+        return (f"https://crates.io/api/v1/crates/{self.name}/{self.version}/"
+                "download")
+
 
 Crates = typing.List[Crate]
 
