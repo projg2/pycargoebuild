@@ -31,7 +31,7 @@ def cargo_to_spdx(license_str: str) -> str:
     return license_str.replace("/", " OR ")
 
 
-def get_crates(f: typing.BinaryIO, exclude: list[str]) -> Crates:
+def get_crates(f: typing.BinaryIO, exclude: typing.Container[str]) -> Crates:
     """Read crate list from the open ``Cargo.lock`` file"""
     cargo_lock = tomllib.load(f)
     assert cargo_lock["version"] == 3
