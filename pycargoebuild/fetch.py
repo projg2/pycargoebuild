@@ -1,26 +1,32 @@
 import hashlib
 import subprocess
-import typing
-
 from pathlib import Path
 
 from pycargoebuild.cargo import Crates
 
 
-def fetch_crates(crates: Crates, distdir: Path
-                 ) -> typing.Generator[Path, None, None]:
+def fetch_crates(crates: Crates, distdir: Path) -> None:
     """
-    Fetch specified crates into distdir and yield resulting paths
+    Fetch specified crates into distdir
     """
 
     distdir.mkdir(parents=True, exist_ok=True)
-    buffer = bytearray(128 * 1024)
-    mv = memoryview(buffer)
     for crate in crates:
         path = distdir / crate.filename
         if not path.exists():
             subprocess.check_call(
                 ["wget", "-O", str(path), crate.crates_io_url])
+
+
+def verify_crates(crates: Crates, distdir: Path) -> None:
+    """
+    Verify checksums of crates fetched into distdir
+    """
+
+    buffer = bytearray(128 * 1024)
+    mv = memoryview(buffer)
+    for crate in crates:
+        path = distdir / crate.filename
         with open(path, "rb", buffering=0) as f:
             hasher = hashlib.sha256()
             while True:
@@ -31,4 +37,3 @@ def fetch_crates(crates: Crates, distdir: Path
             assert hasher.hexdigest() == crate.checksum, (
                 f"checksum mismatch for {path}, got: {hasher.hexdigest()}, "
                 f"exp: {crate.checksum}")
-        yield path
