@@ -8,7 +8,7 @@ from pathlib import Path
 import license_expression
 
 from pycargoebuild import __version__
-from pycargoebuild.cargo import PackageMetadata, get_package_metadata
+from pycargoebuild.cargo import Crates, PackageMetadata, get_package_metadata
 from pycargoebuild.license import spdx_to_ebuild
 
 
@@ -41,7 +41,7 @@ KEYWORDS="~amd64"
 
 
 def get_ebuild(pkg_meta: PackageMetadata,
-               cargo_lock: dict,
+               crates: Crates,
                distdir: Path,
                ) -> str:
     """
@@ -55,18 +55,14 @@ def get_ebuild(pkg_meta: PackageMetadata,
                                     strict=True)
 
     # get crate list from Cargo.lock
-    assert cargo_lock["version"] == 3
-    deps = [(p["name"], p["version"], p["checksum"])
-            for p in cargo_lock["package"]
-            if p["name"] != pkg_meta.name]
-    crates = "\n".join(f"\t{p}-{v}" for p, v, _ in deps)
+    crate_var = "\n".join(f"\t{p.name}-{p.version}" for p in crates)
 
     # fetch all crates, verify their checksums and grab licenses
     distdir.mkdir(parents=True, exist_ok=True)
     buffer = bytearray(128 * 1024)
     mv = memoryview(buffer)
     crate_licenses = set()
-    for p, v, csum in deps:
+    for p, v, csum in crates:
         path = distdir / f"{p}-{v}.crate"
         if not path.exists():
             url = f"https://crates.io/api/v1/crates/{p}/{v}/download"
@@ -94,7 +90,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
     parsed_license = spdx.parse(combined_license, validate=True, strict=True)
     final_license = parsed_license.simplify()
 
-    return EBUILD_TEMPLATE.format(crates=crates,
+    return EBUILD_TEMPLATE.format(crates=crate_var,
                                   crate_licenses=spdx_to_ebuild(final_license),
                                   description=pkg_meta.description or "",
                                   homepage=pkg_meta.homepage or "",

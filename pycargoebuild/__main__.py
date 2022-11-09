@@ -4,7 +4,7 @@ import sys
 
 from pathlib import Path
 
-from pycargoebuild.cargo import get_package_metadata
+from pycargoebuild.cargo import get_crates, get_package_metadata
 from pycargoebuild.ebuild import get_ebuild
 
 if sys.version_info >= (3, 11):
@@ -33,7 +33,7 @@ def main(prog_name: str, *argv: str) -> int:
     with open(args.directory / "Cargo.toml", "rb") as f:
         pkg_meta = get_package_metadata(f)
     with open(args.directory / "Cargo.lock", "rb") as f:
-        cargo_lock = tomllib.load(f)
+        crates = get_crates(f, exclude=[pkg_meta.name])
 
     if args.distdir is None:
         from portage import create_trees
@@ -41,7 +41,7 @@ def main(prog_name: str, *argv: str) -> int:
         tree = trees[max(trees)]
         args.distdir = Path(tree["porttree"].settings["DISTDIR"])
 
-    ebuild = get_ebuild(pkg_meta, cargo_lock, distdir=args.distdir)
+    ebuild = get_ebuild(pkg_meta, crates, distdir=args.distdir)
 
     outfile = Path(args.output.format(name=pkg_meta.name,
                                       version=pkg_meta.version))

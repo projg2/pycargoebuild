@@ -7,6 +7,15 @@ else:
     import tomli as tomllib
 
 
+class Crate(typing.NamedTuple):
+    name: str
+    version: str
+    checksum: str
+
+
+Crates = typing.List[Crate]
+
+
 class PackageMetadata(typing.NamedTuple):
     name: str
     version: str
@@ -20,6 +29,15 @@ def cargo_to_spdx(license_str: str) -> str:
     Convert deprecated Cargo license string to SPDX-2.0, if necessary.
     """
     return license_str.replace("/", " OR ")
+
+
+def get_crates(f: typing.IO[bytes], exclude: list[str]) -> Crates:
+    """Read crate list from the open ``Cargo.lock`` file"""
+    cargo_lock = tomllib.load(f)
+    assert cargo_lock["version"] == 3
+    return [Crate(name=p["name"], version=p["version"], checksum=p["checksum"])
+            for p in cargo_lock["package"]
+            if p["name"] not in exclude]
 
 
 def get_package_metadata(f: typing.IO[bytes]) -> PackageMetadata:
