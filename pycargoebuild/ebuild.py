@@ -81,7 +81,10 @@ def get_ebuild(pkg_meta: PackageMetadata,
             tarf = crate.extractfile(f"{p}-{v}/Cargo.toml")
             assert tarf is not None
             with tarf:
-                crate_metadata = get_package_metadata(tarf)
+                # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
+                # expects BinaryIO -- but it actually is compatible
+                # https://github.com/hukkin/tomli/issues/214
+                crate_metadata = get_package_metadata(tarf)  # type: ignore
                 crate_licenses.add(crate_metadata.license)
 
     # build list of (additional) crate licenses
