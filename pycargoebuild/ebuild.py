@@ -1,14 +1,13 @@
 import datetime
-import hashlib
-import subprocess
 import tarfile
+import typing
 
 from pathlib import Path
 
 import license_expression
 
 from pycargoebuild import __version__
-from pycargoebuild.cargo import Crates, PackageMetadata, get_package_metadata
+from pycargoebuild.cargo import PackageMetadata, get_package_metadata
 from pycargoebuild.license import spdx_to_ebuild
 
 
@@ -40,9 +39,7 @@ KEYWORDS="~amd64"
 """
 
 
-def get_ebuild(pkg_meta: PackageMetadata,
-               crates: Crates,
-               distdir: Path,
+def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
                ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
@@ -54,31 +51,15 @@ def get_ebuild(pkg_meta: PackageMetadata,
                                     validate=True,
                                     strict=True)
 
-    # get crate list from Cargo.lock
-    crate_var = "\n".join(f"\t{p.name}-{p.version}" for p in crates)
+    # construct the CRATES var
+    crate_var = "\n".join(f"\t{p.name}" for p in crate_files)
 
-    # fetch all crates, verify their checksums and grab licenses
-    distdir.mkdir(parents=True, exist_ok=True)
-    buffer = bytearray(128 * 1024)
-    mv = memoryview(buffer)
+    # grab crate licenses
     crate_licenses = set()
-    for p, v, csum in crates:
-        path = distdir / f"{p}-{v}.crate"
-        if not path.exists():
-            url = f"https://crates.io/api/v1/crates/{p}/{v}/download"
-            subprocess.check_call(["wget", "-O", path, url])
-        with open(path, "rb", buffering=0) as f:
-            hasher = hashlib.sha256()
-            while True:
-                rd = f.readinto(mv)
-                if rd == 0:
-                    break
-                hasher.update(mv[:rd])
-            assert hasher.hexdigest() == csum, (
-                f"checksum mismatch for {path}, got: {hasher.hexdigest()}, "
-                f"exp: {csum}")
+    for path in crate_files:
+        assert path.name.endswith(".crate")
         with tarfile.open(path, "r:gz") as crate:
-            tarf = crate.extractfile(f"{p}-{v}/Cargo.toml")
+            tarf = crate.extractfile(f"{path.name[:-6]}/Cargo.toml")
             assert tarf is not None
             with tarf:
                 # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
@@ -87,7 +68,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
                 crate_metadata = get_package_metadata(tarf)  # type: ignore
                 crate_licenses.add(crate_metadata.license)
 
-    # build list of (additional) crate licenses
+    # combine crate licenses and simplify the result
     crate_licenses.discard(pkg_meta.license)
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
     parsed_license = spdx.parse(combined_license, validate=True, strict=True)

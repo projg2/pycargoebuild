@@ -6,6 +6,7 @@ from pathlib import Path
 
 from pycargoebuild.cargo import get_crates, get_package_metadata
 from pycargoebuild.ebuild import get_ebuild
+from pycargoebuild.fetch import fetch_crates
 
 
 def main(prog_name: str, *argv: str) -> int:
@@ -36,7 +37,8 @@ def main(prog_name: str, *argv: str) -> int:
         tree = trees[max(trees)]
         args.distdir = Path(tree["porttree"].settings["DISTDIR"])
 
-    ebuild = get_ebuild(pkg_meta, crates, distdir=args.distdir)
+    crate_files = list(fetch_crates(crates, distdir=args.distdir))
+    ebuild = get_ebuild(pkg_meta, crate_files)
 
     outfile = Path(args.output.format(name=pkg_meta.name,
                                       version=pkg_meta.version))
