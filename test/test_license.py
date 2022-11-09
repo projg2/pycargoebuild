@@ -41,7 +41,7 @@ SPDX_TEST_VALUES = {
 
 
 @pytest.fixture(scope="module")
-def spdx():
+def spdx() -> license_expression.Licensing:
     with unittest.mock.patch("pycargoebuild.license.MAPPING",
                              new=TEST_LICENSE_MAPPING):
         yield license_expression.Licensing(SPDX_TEST_SYMBOLS)

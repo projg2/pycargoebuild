@@ -1,7 +1,6 @@
 import datetime
 import hashlib
 import subprocess
-import sys
 import tarfile
 
 from pathlib import Path
@@ -11,11 +10,6 @@ import license_expression
 from pycargoebuild import __version__
 from pycargoebuild.cargo import PackageMetadata, get_package_metadata
 from pycargoebuild.license import spdx_to_ebuild
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 
 EBUILD_TEMPLATE = """\

@@ -1,3 +1,5 @@
+import typing
+
 import license_expression
 
 
@@ -20,7 +22,8 @@ def spdx_to_ebuild(spdx: license_expression.Renderable) -> str:
     """
     Convert SPDX license expression to ebuild license string.
     """
-    def sub(x, top=False):
+    def sub(x: license_expression.LicenseExpression, top: bool = False
+            ) -> typing.Generator[str, None, None]:
         if isinstance(x, license_expression.AND):
             if not top:
                 yield "("

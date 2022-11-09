@@ -24,3 +24,20 @@ pycargoebuild = "pycargoebuild.__main__:entry_point"
 
 [project.urls]
 Home = "https://github.com/mgorny/pycargoebuild/"
+
+[tool.mypy]
+disallow_untyped_defs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "test.*"
+# requiring explicit types for all test methods would be cumbersome
+disallow_untyped_defs = false
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "license_expression.*",
+    "portage.*",
+]
+ignore_missing_imports = true

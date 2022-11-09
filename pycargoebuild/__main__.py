@@ -13,7 +13,7 @@ else:
     import tomli as tomllib
 
 
-def main(prog_name, *args):
+def main(prog_name: str, *argv: str) -> int:
     argp = argparse.ArgumentParser(prog=os.path.basename(prog_name))
     argp.add_argument("-d", "--distdir",
                       type=Path,
@@ -28,7 +28,7 @@ def main(prog_name, *args):
                       default=Path("."),
                       nargs="?",
                       help="Directory containing Cargo.* files (default: .)")
-    args = argp.parse_args(args)
+    args = argp.parse_args(argv)
 
     with open(args.directory / "Cargo.toml", "rb") as f:
         pkg_meta = get_package_metadata(f)
@@ -52,7 +52,7 @@ def main(prog_name, *args):
     return 0
 
 
-def entry_point():
+def entry_point() -> None:
     sys.exit(main(*sys.argv))
 
 
