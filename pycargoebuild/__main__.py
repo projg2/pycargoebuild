@@ -70,8 +70,8 @@ def main(prog_name: str, *argv: str) -> int:
 
     outfile = Path(args.output.format(name=pkg_meta.name,
                                       version=pkg_meta.version))
-    with open(outfile, "w", encoding="utf-8") as f:
-        f.write(ebuild)
+    with open(outfile, "w", encoding="utf-8") as outf:
+        outf.write(ebuild)
 
     print(f"{outfile}", file=sys.stderr)
     return 0
