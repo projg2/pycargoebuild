@@ -1,5 +1,7 @@
 import typing
 
+from textwrap import TextWrapper
+
 
 class CompoundGroup(typing.NamedTuple):
     prefix: typing.List[str]
@@ -86,24 +88,33 @@ def format_license_var(value: str, prefix: str, line_width: int = 72) -> str:
                 if value is None:
                     return lines
                 # compound group
-                # again, if it's flat, let's inline it
+                # again, if it's flat and short, let's inline it
                 if all(isinstance(x, str) for x in value.values):
                     # mypy can't figure the all() clause above out
-                    lines.append(Line(indent,
-                                      value.prefix + value.values +
-                                      value.suffix))  # type: ignore
-                else:
-                    lines.append(Line(indent, value.prefix))
-                    format_into(lines, indent + 1, value)
-                    lines.append(Line(indent, value.suffix))
+                    sub_values: typing.List[str] = (
+                        value.prefix + value.values +
+                        value.suffix)  # type: ignore
+                    test_line = indent * "    " + " ".join(sub_values)
+                    if len(test_line) <= line_width:
+                        lines.append(Line(indent, sub_values))
+                        continue
+                # otherwise, append it multi-line
+                lines.append(Line(indent, value.prefix))
+                format_into(lines, indent + 1, value)
+                lines.append(Line(indent, value.suffix))
 
     lines = format_into([], 1, ast)
 
     # 4. combine lines into string, adding indentation and wrapping
     # as necessary
     value = "\n"
+    wrapper = TextWrapper(expand_tabs=False,
+                          replace_whitespace=False,
+                          drop_whitespace=True,
+                          break_long_words=False)
     for line in lines:
-        # TODO: line wrapping
-        value += line.indent * "\t" + " ".join(line.tokens) + "\n"
+        wrapper.width = line_width - line.indent * 4
+        for wrapped_line in wrapper.wrap(" ".join(line.tokens)):
+            value += line.indent * "\t" + f"{wrapped_line}\n"
 
     return value

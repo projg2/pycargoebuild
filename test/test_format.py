@@ -48,8 +48,37 @@ FORMAT_TESTS = {
     # line wrapping tests
     #    4   8  12  16  20  24
     # LICENSE="ABCD ABCD ABCD"
+    # tab>ABCD ABCD ABCD ABCD
     "ABCD ABCD ABCD": "ABCD ABCD ABCD",
+    "ABCD ABCD ABCD ABCD": """
+\tABCD ABCD ABCD ABCD
+""",
+    "ABCD ABCD ABCD ABCD ABCD": """
+\tABCD ABCD ABCD ABCD
+\tABCD
+""",
+    "ABCD ABCD ABCD ABCD ABCD || ( ABC ABC ABC )": """
+\tABCD ABCD ABCD ABCD
+\tABCD
+\t|| ( ABC ABC ABC )
+""",
+    "ABCD ABCD ABCD ABCD ABCD || ( ABCD ABCD ABCD )": """
+\tABCD ABCD ABCD ABCD
+\tABCD
+\t|| (
+\t\tABCD ABCD ABCD
+\t)
+""",
+    "ABCD ABCD ABCD ABCD ABCD || ( ABCD ABCD ABCD ABCD )": """
+\tABCD ABCD ABCD ABCD
+\tABCD
+\t|| (
+\t\tABCD ABCD ABCD
+\t\tABCD
+\t)
+""",
 }
+
 
 @pytest.mark.parametrize("value", FORMAT_TESTS)
 def test_format_license_var(value):
