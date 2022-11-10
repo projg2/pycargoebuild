@@ -52,7 +52,7 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
                                     strict=True)
 
     # construct the CRATES var
-    crate_var = "\n".join(f"\t{p.name}" for p in crate_files)
+    crate_var = "\n".join(f"\t{p.name[:-6]}" for p in crate_files)
 
     # grab crate licenses
     crate_licenses = set()
