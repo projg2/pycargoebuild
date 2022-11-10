@@ -8,6 +8,7 @@ import license_expression
 
 from pycargoebuild import __version__
 from pycargoebuild.cargo import PackageMetadata, get_package_metadata
+from pycargoebuild.format import format_license_var
 from pycargoebuild.license import spdx_to_ebuild
 
 
@@ -33,7 +34,7 @@ SRC_URI="
 
 LICENSE="{pkg_license}"
 # Dependent crate licenses
-LICENSE+=" {crate_licenses}"
+LICENSE+="{crate_licenses}"
 SLOT="0"
 KEYWORDS="~amd64"
 """
@@ -76,10 +77,13 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
     final_license = parsed_license.simplify()
 
     return EBUILD_TEMPLATE.format(crates=crate_var,
-                                  crate_licenses=spdx_to_ebuild(final_license),
+                                  crate_licenses=format_license_var(
+                                      spdx_to_ebuild(final_license),
+                                      'LICENSE+=" '),
                                   description=pkg_meta.description or "",
                                   homepage=pkg_meta.homepage or "",
-                                  pkg_license=spdx_to_ebuild(
-                                      parsed_pkg_license),
+                                  pkg_license=format_license_var(
+                                      spdx_to_ebuild(parsed_pkg_license),
+                                      'LICENSE="',),
                                   prog_version=__version__,
                                   year=datetime.date.today().year)
