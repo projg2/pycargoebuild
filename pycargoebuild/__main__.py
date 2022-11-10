@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import sys
+import typing
 
 from pathlib import Path
 
@@ -11,6 +12,9 @@ from pycargoebuild.fetch import (fetch_crates_using_wget,
                                  verify_crates)
 
 
+FETCHERS = ("aria2", "wget")
+
+
 def main(prog_name: str, *argv: str) -> int:
     argp = argparse.ArgumentParser(prog=os.path.basename(prog_name))
     argp.add_argument("-d", "--distdir",
@@ -18,9 +22,10 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Directory to store downloaded crates in "
                            "(default: get from Portage)")
     argp.add_argument("-F", "--fetcher",
-                      choices=("aria2", "wget"),
-                      default="wget",
-                      help="Fetcher to use (one of: aria2, wget [default])")
+                      choices=("auto",) + FETCHERS,
+                      default="auto",
+                      help="Fetcher to use (one of: auto [default], "
+                           f"{', '.join(FETCHERS)})")
     argp.add_argument("-o", "--output",
                       default="{name}-{version}.ebuild",
                       help="Ebuild file to write (default: "
@@ -43,11 +48,21 @@ def main(prog_name: str, *argv: str) -> int:
         tree = trees[max(trees)]
         args.distdir = Path(tree["porttree"].settings["DISTDIR"])
 
-    if args.fetcher == "wget":
-        fetch_crates_using_wget(crates, distdir=args.distdir)
-    elif args.fetcher == "aria2":
-        fetch_crates_using_aria2(crates, distdir=args.distdir)
-    else:
+    def try_fetcher(name: str, func: typing.Callable[..., None]) -> bool:
+        if args.fetcher == "auto":
+            try:
+                func(crates, distdir=args.distdir)
+            except FileNotFoundError:
+                return False
+        elif args.fetcher == name:
+            func(crates, distdir=args.distdir)
+        return True
+
+    if (not try_fetcher("aria2", fetch_crates_using_aria2) and
+            not try_fetcher("wget", fetch_crates_using_wget)):
+        if args.fetcher == "auto":
+            raise RuntimeError(
+                f"No supported fetcher found (out of {', '.join(FETCHERS)})")
         assert False, f"Unexpected args.fetcher={args.fetcher}"
     verify_crates(crates, distdir=args.distdir)
     crate_files = [args.distdir / crate.filename for crate in crates]
