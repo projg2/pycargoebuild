@@ -5,9 +5,23 @@ from pathlib import Path
 from pycargoebuild.cargo import Crates
 
 
-def fetch_crates(crates: Crates, distdir: Path) -> None:
+def fetch_crates_using_aria2(crates: Crates, distdir: Path) -> None:
     """
-    Fetch specified crates into distdir
+    Fetch specified crates into distdir using aria2c(1)
+    """
+
+    distdir.mkdir(parents=True, exist_ok=True)
+    crate_urls = [crate.crates_io_url
+                  for crate in crates
+                  if not (distdir / crate.filename).exists()]
+    if crate_urls:
+        subprocess.check_call(
+            ["aria2c", "-Z", "-d", str(distdir)] + crate_urls)
+
+
+def fetch_crates_using_wget(crates: Crates, distdir: Path) -> None:
+    """
+    Fetch specified crates into distdir using wget(1)
     """
 
     distdir.mkdir(parents=True, exist_ok=True)

@@ -6,7 +6,9 @@ from pathlib import Path
 
 from pycargoebuild.cargo import get_crates, get_package_metadata
 from pycargoebuild.ebuild import get_ebuild
-from pycargoebuild.fetch import fetch_crates, verify_crates
+from pycargoebuild.fetch import (fetch_crates_using_wget,
+                                 fetch_crates_using_aria2,
+                                 verify_crates)
 
 
 def main(prog_name: str, *argv: str) -> int:
@@ -15,6 +17,10 @@ def main(prog_name: str, *argv: str) -> int:
                       type=Path,
                       help="Directory to store downloaded crates in "
                            "(default: get from Portage)")
+    argp.add_argument("-F", "--fetcher",
+                      choices=("aria2", "wget"),
+                      default="wget",
+                      help="Fetcher to use (one of: aria2, wget [default])")
     argp.add_argument("-o", "--output",
                       default="{name}-{version}.ebuild",
                       help="Ebuild file to write (default: "
@@ -37,7 +43,12 @@ def main(prog_name: str, *argv: str) -> int:
         tree = trees[max(trees)]
         args.distdir = Path(tree["porttree"].settings["DISTDIR"])
 
-    fetch_crates(crates, distdir=args.distdir)
+    if args.fetcher == "wget":
+        fetch_crates_using_wget(crates, distdir=args.distdir)
+    elif args.fetcher == "aria2":
+        fetch_crates_using_aria2(crates, distdir=args.distdir)
+    else:
+        assert False, f"Unexpected args.fetcher={args.fetcher}"
     verify_crates(crates, distdir=args.distdir)
     crate_files = [args.distdir / crate.filename for crate in crates]
     ebuild = get_ebuild(pkg_meta, crate_files)
