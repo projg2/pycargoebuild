@@ -1,3 +1,4 @@
+import typing
 import unittest.mock
 
 import license_expression
@@ -55,7 +56,7 @@ REAL_MAPPING_TEST_VALUES = {
 
 
 @pytest.fixture(scope="module")
-def spdx() -> license_expression.Licensing:
+def spdx() -> typing.Generator[license_expression.Licensing, None, None]:
     with unittest.mock.patch("pycargoebuild.license.MAPPING",
                              new=TEST_LICENSE_MAPPING):
         yield license_expression.Licensing(SPDX_TEST_SYMBOLS)
@@ -68,9 +69,9 @@ def test_spdx_to_ebuild(spdx, value):
 
 
 @pytest.fixture(scope="module")
-def real_mapping() -> None:
+def real_mapping() -> typing.Generator[None, None, None]:
     load_license_mapping()
-    yield None
+    yield
 
 
 @pytest.mark.parametrize("value", REAL_MAPPING_TEST_VALUES)
