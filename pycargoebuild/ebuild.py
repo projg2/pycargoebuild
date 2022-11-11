@@ -63,25 +63,34 @@ def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
     return ""
 
 
+def get_license_from_crate(path: Path) -> str:
+    """
+    Read the metadata from specified crate and return its license string
+    """
+
+    assert path.name.endswith(".crate")
+    with tarfile.open(path, "r:gz") as crate:
+        tarf = crate.extractfile(f"{path.name[:-6]}/Cargo.toml")
+        if tarf is None:
+            raise RuntimeError(f"Cargo.toml not found in {path}")
+        with tarf:
+            # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
+            # expects BinaryIO -- but it actually is compatible
+            # https://github.com/hukkin/tomli/issues/214
+            crate_metadata = get_package_metadata(tarf)  # type: ignore
+            if crate_metadata.license is None:
+                raise RuntimeError(
+                    f"Create {path.name} does not specify a license!")
+            return crate_metadata.license
+
+
 def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
     """
     Get the value of LICENSE string for crates
     """
 
     spdx = license_expression.get_spdx_licensing()
-    crate_licenses = set()
-    for path in crate_files:
-        assert path.name.endswith(".crate")
-        with tarfile.open(path, "r:gz") as crate:
-            tarf = crate.extractfile(f"{path.name[:-6]}/Cargo.toml")
-            if tarf is None:
-                raise RuntimeError(f"Cargo.toml not found in {path}")
-            with tarf:
-                # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
-                # expects BinaryIO -- but it actually is compatible
-                # https://github.com/hukkin/tomli/issues/214
-                crate_metadata = get_package_metadata(tarf)  # type: ignore
-                crate_licenses.add(crate_metadata.license)
+    crate_licenses = set(map(get_license_from_crate, crate_files))
 
     # combine crate licenses and simplify the result
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
