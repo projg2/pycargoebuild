@@ -7,7 +7,7 @@ import typing
 from pathlib import Path
 
 from pycargoebuild.cargo import get_crates, get_package_metadata
-from pycargoebuild.ebuild import get_ebuild
+from pycargoebuild.ebuild import get_ebuild, update_ebuild
 from pycargoebuild.fetch import (fetch_crates_using_wget,
                                  fetch_crates_using_aria2,
                                  verify_crates)
@@ -31,6 +31,11 @@ def main(prog_name: str, *argv: str) -> int:
                       default="auto",
                       help="Fetcher to use (one of: auto [default], "
                            f"{', '.join(FETCHERS)})")
+    argp.add_argument("-i", "--inplace",
+                      action="store_true",
+                      help="Update the CRATES and LICENSE variables "
+                           "in an existing ebuild (specified as --output) "
+                           "instead of creating a new one")
     argp.add_argument("-o", "--output",
                       default="{name}-{version}.ebuild",
                       help="Ebuild file to write (default: "
@@ -50,7 +55,12 @@ def main(prog_name: str, *argv: str) -> int:
 
     outfile = Path(args.output.format(name=pkg_meta.name,
                                       version=pkg_meta.version))
-    if not args.force and outfile.exists():
+    if args.inplace:
+        if not outfile.exists():
+            print(f"Updating {outfile} requested via -i but it does not exist",
+                  file=sys.stderr)
+            return 1
+    elif not args.force and outfile.exists():
         print(f"{outfile} exists already, pass -f to overwrite it",
               file=sys.stderr)
         return 1
@@ -79,7 +89,13 @@ def main(prog_name: str, *argv: str) -> int:
         assert False, f"Unexpected args.fetcher={args.fetcher}"
     verify_crates(crates, distdir=args.distdir)
     crate_files = [args.distdir / crate.filename for crate in crates]
-    ebuild = get_ebuild(pkg_meta, crate_files)
+
+    if args.inplace:
+        with open(outfile, "r", encoding="utf-8") as ebuildf:
+            ebuild = ebuildf.read()
+        ebuild = update_ebuild(ebuild, pkg_meta, crate_files)
+    else:
+        ebuild = get_ebuild(pkg_meta, crate_files)
 
     try:
         with tempfile.NamedTemporaryFile(mode="w",

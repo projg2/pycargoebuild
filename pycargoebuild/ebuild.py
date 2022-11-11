@@ -1,4 +1,5 @@
 import datetime
+import re
 import tarfile
 import typing
 
@@ -40,26 +41,34 @@ KEYWORDS="~amd64"
 """
 
 
-def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
-               ) -> str:
+def get_CRATES(crate_files: typing.Iterable[Path]) -> str:
     """
-    Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
+    Return the value of CRATES for the given crate list
+    """
+    return "\n".join(f"\t{p.name[:-6]}" for p in crate_files)
+
+
+def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
+    """
+    Get the value of package's LICENSE string
     """
 
-    # get package's license
     spdx = license_expression.get_spdx_licensing()
-    pkg_license_str = ""
     if pkg_meta.license is not None:
         parsed_pkg_license = spdx.parse(pkg_meta.license,
                                         validate=True,
                                         strict=True)
-        pkg_license_str = format_license_var(
-            spdx_to_ebuild(parsed_pkg_license), 'LICENSE="')
+        return format_license_var(spdx_to_ebuild(parsed_pkg_license),
+                                  'LICENSE="')
+    return ""
 
-    # construct the CRATES var
-    crate_var = "\n".join(f"\t{p.name[:-6]}" for p in crate_files)
 
-    # grab crate licenses
+def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
+    """
+    Get the value of LICENSE string for crates
+    """
+
+    spdx = license_expression.get_spdx_licensing()
     crate_licenses = set()
     for path in crate_files:
         assert path.name.endswith(".crate")
@@ -75,7 +84,6 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
                 crate_licenses.add(crate_metadata.license)
 
     # combine crate licenses and simplify the result
-    crate_licenses.discard(pkg_meta.license)
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
     parsed_license = spdx.parse(combined_license, validate=True, strict=True)
     final_license = parsed_license.simplify()
@@ -84,11 +92,65 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
     # if it's not a multiline string, we need to prepend " "
     if not crate_licenses_str.startswith("\n"):
         crate_licenses_str = " " + crate_licenses_str
+    return crate_licenses_str
 
-    return EBUILD_TEMPLATE.format(crates=crate_var,
-                                  crate_licenses=crate_licenses_str,
-                                  description=pkg_meta.description or "",
-                                  homepage=pkg_meta.homepage or "",
-                                  pkg_license=pkg_license_str,
-                                  prog_version=__version__,
-                                  year=datetime.date.today().year)
+
+def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
+               ) -> str:
+    """
+    Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
+    """
+    return EBUILD_TEMPLATE.format(
+        crates=get_CRATES(crate_files),
+        crate_licenses=get_crate_LICENSE(crate_files),
+        description=pkg_meta.description or "",
+        homepage=pkg_meta.homepage or "",
+        pkg_license=get_package_LICENSE(pkg_meta),
+        prog_version=__version__,
+        year=datetime.date.today().year)
+
+
+def update_ebuild(ebuild: str,
+                  pkg_meta: PackageMetadata,
+                  crate_files: typing.Iterable[Path]
+                  ) -> str:
+    """
+    Update the CRATES and LICENSE in an existing ebuild
+    """
+
+    crates_re = re.compile(r'^CRATES="(.*?)"$', re.DOTALL | re.MULTILINE)
+    crates_m = list(crates_re.finditer(ebuild))
+    if not crates_m:
+        raise RuntimeError("CRATES variable not found in ebuild")
+    elif len(crates_m) > 1:
+        raise RuntimeError("Multiple CRATES variables found in ebuild")
+    crates, = crates_m
+
+    license_re = re.compile(
+        r'^# Dependent crate licenses\nLICENSE[+]="(.*?)"$',
+        re.DOTALL | re.MULTILINE)
+    license_m = list(license_re.finditer(ebuild))
+    if not license_m:
+        raise RuntimeError("Crate LICENSE+= not found in ebuild (or missing "
+                           "marker comment)")
+    elif len(license_m) > 1:
+        raise RuntimeError("Multiple crate LICENSE+= found in ebuild")
+    license, = license_m
+
+    if crates.start(0) < license.start(0):
+        if crates.end(0) > license.start(0):
+            raise RuntimeError("CRATES and LICENSE+= overlap!")
+    else:
+        if crates.end(0) < license.start(0):
+            raise RuntimeError("CRATES and LICENSE+= overlap!")
+
+    first_match_start = min(crates.start(1), license.start(1))
+    first_match_end = min(crates.end(1), license.end(1))
+    second_match_start = max(crates.start(1), license.start(1))
+    second_match_end = max(crates.end(1), license.end(1))
+
+    return (ebuild[:first_match_start] +
+            f"\n{get_CRATES(crate_files)}\n" +
+            ebuild[first_match_end:second_match_start] +
+            get_crate_LICENSE(crate_files) +
+            ebuild[second_match_end:])
