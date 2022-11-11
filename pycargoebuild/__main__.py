@@ -23,6 +23,9 @@ def main(prog_name: str, *argv: str) -> int:
                       type=Path,
                       help="Directory to store downloaded crates in "
                            "(default: get from Portage)")
+    argp.add_argument("-f", "--force",
+                      action="store_true",
+                      help="Force overwriting the output file")
     argp.add_argument("-F", "--fetcher",
                       choices=("auto",) + FETCHERS,
                       default="auto",
@@ -44,6 +47,13 @@ def main(prog_name: str, *argv: str) -> int:
         pkg_meta = get_package_metadata(f)
     with open(args.directory / "Cargo.lock", "rb") as f:
         crates = get_crates(f, exclude=[pkg_meta.name])
+
+    outfile = Path(args.output.format(name=pkg_meta.name,
+                                      version=pkg_meta.version))
+    if not args.force and outfile.exists():
+        print(f"{outfile} exists already, pass -f to overwrite it",
+              file=sys.stderr)
+        return 1
 
     if args.distdir is None:
         from portage import create_trees
@@ -71,8 +81,6 @@ def main(prog_name: str, *argv: str) -> int:
     crate_files = [args.distdir / crate.filename for crate in crates]
     ebuild = get_ebuild(pkg_meta, crate_files)
 
-    outfile = Path(args.output.format(name=pkg_meta.name,
-                                      version=pkg_meta.version))
     try:
         with tempfile.NamedTemporaryFile(mode="w",
                                          encoding="utf-8",
