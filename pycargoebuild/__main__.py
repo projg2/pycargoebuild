@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import sys
+import tempfile
 import typing
 
 from pathlib import Path
@@ -72,8 +73,16 @@ def main(prog_name: str, *argv: str) -> int:
 
     outfile = Path(args.output.format(name=pkg_meta.name,
                                       version=pkg_meta.version))
-    with open(outfile, "w", encoding="utf-8") as outf:
-        outf.write(ebuild)
+    try:
+        with tempfile.NamedTemporaryFile(mode="w",
+                                         encoding="utf-8",
+                                         dir=outfile.parent,
+                                         delete=False) as outf:
+            outf.write(ebuild)
+    except Exception:
+        Path(outf.name).unlink()
+        raise
+    Path(outf.name).rename(outfile)
 
     print(f"{outfile}", file=sys.stderr)
     return 0
