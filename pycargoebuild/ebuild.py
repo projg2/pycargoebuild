@@ -81,6 +81,9 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
     final_license = parsed_license.simplify()
     crate_licenses_str = format_license_var(spdx_to_ebuild(final_license),
                                             'LICENSE+=" ')
+    # if it's not a multiline string, we need to prepend " "
+    if not crate_licenses_str.startswith("\n"):
+        crate_licenses_str = " " + crate_licenses_str
 
     return EBUILD_TEMPLATE.format(crates=crate_var,
                                   crate_licenses=crate_licenses_str,
