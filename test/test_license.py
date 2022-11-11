@@ -3,20 +3,26 @@ import unittest.mock
 import license_expression
 import pytest
 
-from pycargoebuild.license import spdx_to_ebuild
+from pycargoebuild.license import (load_license_mapping,
+                                   spdx_to_ebuild,
+                                   symbol_to_ebuild,
+                                   )
 
 TEST_LICENSE_MAPPING = {
-    "A": "A",
-    "B": "B",
-    "C": "Cm",
-    "A WITH EXC": "A-EXC",
-    "B WITH EXC": "B-EXC",
+    # keys are lowercase in MAPPING
+    "a": "A",
+    "b": "B",
+    "c": "Cm",
+    "a with exc": "A-EXC",
+    "b with exc": "B-EXC",
 }
 
 SPDX_TEST_SYMBOLS = [
     "A",
     "B",
     "C",
+    "A+",
+    "MULTI",
     license_expression.LicenseSymbol("EXC", is_exception=True),
 ]
 
@@ -39,6 +45,14 @@ SPDX_TEST_VALUES = {
     "A OR B WITH EXC": "|| ( A B-EXC )",
 }
 
+REAL_MAPPING_TEST_VALUES = {
+    "BSD-3-Clause": "BSD",
+    "Apache-2.0": "Apache-2.0",
+    "aPACHE-2.0": "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception": "Apache-2.0-with-LLVM-exceptions",
+    "aPACHE-2.0 WITH llvm-Exception": "Apache-2.0-with-LLVM-exceptions",
+}
+
 
 @pytest.fixture(scope="module")
 def spdx() -> license_expression.Licensing:
@@ -51,3 +65,14 @@ def spdx() -> license_expression.Licensing:
 def test_spdx_to_ebuild(spdx, value):
     parsed_license = spdx.parse(value, validate=True, strict=True)
     assert spdx_to_ebuild(parsed_license) == SPDX_TEST_VALUES[value]
+
+
+@pytest.fixture(scope="module")
+def real_mapping() -> None:
+    load_license_mapping()
+    yield None
+
+
+@pytest.mark.parametrize("value", REAL_MAPPING_TEST_VALUES)
+def test_real_license_mapping(real_mapping, value):
+    assert symbol_to_ebuild(value) == REAL_MAPPING_TEST_VALUES[value]

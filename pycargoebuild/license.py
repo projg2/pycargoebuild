@@ -1,21 +1,27 @@
+import configparser
+import importlib.resources
 import typing
 
 import license_expression
 
 
-MAPPING = {
-    "Apache-2.0": "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception": "Apache-2.0-with-LLVM-exceptions",
-    "ISC": "ISC",
-    "MIT": "MIT",
-    "Artistic-2.0": "Artistic-2",
-    "CC0-1.0": "CC0-1.0",
-    "Unlicense": "Unlicense",
-}
+MAPPING: typing.Dict[str, str] = {}
+
+
+def load_license_mapping() -> None:
+    conf = configparser.ConfigParser(comment_prefixes=("#",),
+                                     delimiters=("=",),
+                                     empty_lines_in_values=False,
+                                     interpolation=None)
+    with importlib.resources.open_text(__package__,
+                                       "license-mapping.conf") as f:
+        conf.read_file(f)
+
+    MAPPING.update((k.lower(), v) for k, v in conf.items("spdx-to-ebuild"))
 
 
 def symbol_to_ebuild(license_symbol: license_expression.LicenseSymbol) -> str:
-    return MAPPING[str(license_symbol)]
+    return MAPPING[str(license_symbol).lower()]
 
 
 def spdx_to_ebuild(spdx: license_expression.Renderable) -> str:
@@ -32,8 +38,7 @@ def spdx_to_ebuild(spdx: license_expression.Renderable) -> str:
             if not top:
                 yield ")"
         elif isinstance(x, license_expression.OR):
-            yield "||"
-            yield "("
+            yield "|| ("
             for y in x.args:
                 yield from sub(y)
             yield ")"

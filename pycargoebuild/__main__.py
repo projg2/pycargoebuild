@@ -10,6 +10,7 @@ from pycargoebuild.ebuild import get_ebuild
 from pycargoebuild.fetch import (fetch_crates_using_wget,
                                  fetch_crates_using_aria2,
                                  verify_crates)
+from pycargoebuild.license import load_license_mapping
 
 
 FETCHERS = ("aria2", "wget")
@@ -37,6 +38,7 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Directory containing Cargo.* files (default: .)")
     args = argp.parse_args(argv)
 
+    load_license_mapping()
     with open(args.directory / "Cargo.toml", "rb") as f:
         pkg_meta = get_package_metadata(f)
     with open(args.directory / "Cargo.lock", "rb") as f:
