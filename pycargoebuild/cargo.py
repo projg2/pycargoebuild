@@ -28,7 +28,7 @@ Crates = typing.List[Crate]
 class PackageMetadata(typing.NamedTuple):
     name: str
     version: str
-    license: str
+    license: typing.Optional[str]
     description: typing.Optional[str]
     homepage: typing.Optional[str]
 
@@ -57,8 +57,11 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     pkg_meta = cargo_toml["package"]
     if "license_file" in pkg_meta:
         raise NotImplementedError("license_file metadata key not supported")
+    license = pkg_meta.get("license")
+    if license is not None:
+        license = cargo_to_spdx(license)
     return PackageMetadata(name=pkg_meta["name"],
                            version=pkg_meta["version"],
-                           license=cargo_to_spdx(pkg_meta["license"]),
+                           license=license,
                            description=pkg_meta.get("description"),
                            homepage=pkg_meta.get("homepage"))

@@ -48,9 +48,13 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
 
     # get package's license
     spdx = license_expression.get_spdx_licensing()
-    parsed_pkg_license = spdx.parse(pkg_meta.license,
-                                    validate=True,
-                                    strict=True)
+    pkg_license_str = ""
+    if pkg_meta.license is not None:
+        parsed_pkg_license = spdx.parse(pkg_meta.license,
+                                        validate=True,
+                                        strict=True)
+        pkg_license_str = format_license_var(
+            spdx_to_ebuild(parsed_pkg_license), 'LICENSE="')
 
     # construct the CRATES var
     crate_var = "\n".join(f"\t{p.name[:-6]}" for p in crate_files)
@@ -75,15 +79,13 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
     parsed_license = spdx.parse(combined_license, validate=True, strict=True)
     final_license = parsed_license.simplify()
+    crate_licenses_str = format_license_var(spdx_to_ebuild(final_license),
+                                            'LICENSE+=" ')
 
     return EBUILD_TEMPLATE.format(crates=crate_var,
-                                  crate_licenses=format_license_var(
-                                      spdx_to_ebuild(final_license),
-                                      'LICENSE+=" '),
+                                  crate_licenses=crate_licenses_str,
                                   description=pkg_meta.description or "",
                                   homepage=pkg_meta.homepage or "",
-                                  pkg_license=format_license_var(
-                                      spdx_to_ebuild(parsed_pkg_license),
-                                      'LICENSE="',),
+                                  pkg_license=pkg_license_str,
                                   prog_version=__version__,
                                   year=datetime.date.today().year)

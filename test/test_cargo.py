@@ -1,4 +1,5 @@
 import io
+import typing
 
 import pytest
 
@@ -18,31 +19,23 @@ def test_get_crates():
     assert get_crates(io.BytesIO(input_toml), exclude=["test"]) == CRATES
 
 
-@pytest.mark.parametrize("exclude", ["", "description", "homepage"])
+@pytest.mark.parametrize("exclude", ["", "description", "homepage", "license"])
 def test_get_package_metadata(exclude):
-    name = "test"
-    version = "1.2.3"
-    license = "MIT"
-    description = None
-    homepage = None
+    data: typing.Dict[str, typing.Optional[str]] = {
+        "name": "test",
+        "version": "1.2.3",
+        "license": "MIT",
+        "description": "A test package",
+        "homepage": "https://example.com/test",
+    }
 
-    input_toml = f"""
-        [package]
-        name = "{name}"
-        version = "{version}"
-        license = "{license}"
-    """
+    for k in exclude.split():
+        data[k] = None
 
-    if exclude != "description":
-        description = "A test package"
-        input_toml += f'description = "{description}"\n'
-    if exclude != "homepage":
-        homepage = "https://example.com/test"
-        input_toml += f'homepage = "{homepage}"\n'
+    input_toml = "[package]\n"
+    for k, v in data.items():
+        if v is not None:
+            input_toml += f'{k} = "{v}"\n'
 
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
-            PackageMetadata(name=name,
-                            version=version,
-                            description=description,
-                            license=license,
-                            homepage=homepage))
+            PackageMetadata(**data))  # type: ignore
