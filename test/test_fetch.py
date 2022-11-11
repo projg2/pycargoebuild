@@ -1,26 +1,31 @@
-import hashlib
-import unittest.mock
+import pytest
 
-from pathlib import Path
-
+from pycargoebuild.cargo import Crate
 from pycargoebuild.fetch import verify_crates
 
-from .testdata import CRATES
+
+@pytest.fixture(scope="session")
+def test_crates(tmp_path_factory):
+    test_dir = tmp_path_factory.mktemp("crates")
+    with open(test_dir / "foo-1.crate", "wb") as f:
+        f.write(b"test string\n")
+    with open(test_dir / "bar-2.crate", "wb") as f:
+        f.write(b"other string\n")
+    yield test_dir
 
 
-def hash_mocking_crate_gen(crates):
-    for crate in crates:
-        with unittest.mock.patch.object(hashlib, "sha256") as digest_mock:
-            digest_mock.return_value.hexdigest.return_value = crate.checksum
-            yield crate
+def test_verify_pass(test_crates):
+    verify_crates([Crate("foo", "1", "37d2046a395cbfcb2712ff5c96a727b1"
+                                     "966876080047c56717009dbbc235f566"),
+                   Crate("bar", "2", "22d39d98821d4b60c3fcbd0fead3c873"
+                                     "ddd568971cc530070254b769e18623f3"),
+                   ], test_crates)
 
 
-def test_verify():
-    test_path = Path("/test/path")
-    with unittest.mock.patch("pycargoebuild.fetch.open",
-                             unittest.mock.mock_open()) as open_mock:
-        open_mock.return_value.readinto.return_value = 0
-        verify_crates(hash_mocking_crate_gen(CRATES), test_path)
-    open_mock.assert_has_calls(
-        [unittest.mock.call(test_path / crate.filename, "rb", buffering=0)
-         for crate in CRATES], any_order=True)
+def test_verify_fail(test_crates):
+    with pytest.raises(RuntimeError):
+        verify_crates([Crate("foo", "1", "37d2046a395cbfcb2712ff5c96a727b1"
+                                         "966876080047c56717009dbbc235f566"),
+                       Crate("bar", "2", "37d2046a395cbfcb2712ff5c96a727b1"
+                                         "966876080047c56717009dbbc235f566"),
+                       ], test_crates)
