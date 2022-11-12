@@ -8,6 +8,7 @@ authors = [{name = "Michał Górny", email = "mgorny@gentoo.org"}]
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]
+readme = "README.rst"
 requires-python = ">=3.8"
 dependencies = [
     "license_expression",
