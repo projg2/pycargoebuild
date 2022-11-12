@@ -43,15 +43,14 @@ def fetch_crates_using_wget(crates: Crates, distdir: Path) -> None:
         (crate.crates_io_url, distdir / crate.filename) for crate in crates)
 
 
-def verify_crates(crates: Crates, distdir: Path) -> None:
+def verify_files(files: typing.Iterable[typing.Tuple[Path, str]]) -> None:
     """
-    Verify checksums of crates fetched into distdir
+    Verify checksums of specified files
     """
 
     buffer = bytearray(128 * 1024)
     mv = memoryview(buffer)
-    for crate in crates:
-        path = distdir / crate.filename
+    for path, checksum in files:
         with open(path, "rb", buffering=0) as f:
             hasher = hashlib.sha256()
             while True:
@@ -59,7 +58,16 @@ def verify_crates(crates: Crates, distdir: Path) -> None:
                 if rd == 0:
                     break
                 hasher.update(mv[:rd])
-            if hasher.hexdigest() != crate.checksum:
+            if hasher.hexdigest() != checksum:
                 raise RuntimeError(
                     f"checksum mismatch for {path}, got: "
-                    f"{hasher.hexdigest()}, exp: {crate.checksum}")
+                    f"{hasher.hexdigest()}, exp: {checksum}")
+
+
+def verify_crates(crates: Crates, distdir: Path) -> None:
+    """
+    Verify checksums of crates fetched into distdir
+    """
+
+    verify_files(
+        (distdir / crate.filename, crate.checksum) for crate in crates)
