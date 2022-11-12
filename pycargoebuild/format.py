@@ -45,9 +45,9 @@ def format_license_var(value: str, prefix: str, line_width: int = 72) -> str:
                     return current_group
                 else:
                     current_group.values.append(token)
-        except StopIteration:
+        except StopIteration as exception:
             if current_group.prefix and not current_group.suffix:
-                raise ValueError("Unterminated license group")
+                raise ValueError("Unterminated license group") from exception
         return current_group
 
     tokens = iter(value.split())
