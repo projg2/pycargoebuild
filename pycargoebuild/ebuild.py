@@ -21,9 +21,7 @@ EBUILD_TEMPLATE = """\
 
 EAPI=8
 
-CRATES="
-{crates}
-"
+CRATES="{crates}"
 
 inherit cargo
 
@@ -45,7 +43,9 @@ def get_CRATES(crate_files: typing.Iterable[Path]) -> str:
     """
     Return the value of CRATES for the given crate list
     """
-    return "\n".join(f"\t{p.name[:-6]}" for p in crate_files)
+    if not crate_files:
+        return ""
+    return "\n" + "\n".join(f"\t{p.name[:-6]}" for p in crate_files) + "\n"
 
 
 def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
@@ -95,6 +95,8 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
     # combine crate licenses and simplify the result
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
     parsed_license = spdx.parse(combined_license, validate=True, strict=True)
+    if parsed_license is None:
+        return ""
     final_license = parsed_license.simplify()
     crate_licenses_str = format_license_var(spdx_to_ebuild(final_license),
                                             'LICENSE+=" ')
@@ -159,7 +161,7 @@ def update_ebuild(ebuild: str,
     second_match_end = max(crates.end(1), license.end(1))
 
     return (ebuild[:first_match_start] +
-            f"\n{get_CRATES(crate_files)}\n" +
+            get_CRATES(crate_files) +
             ebuild[first_match_end:second_match_start] +
             get_crate_LICENSE(crate_files) +
             ebuild[second_match_end:])
