@@ -80,6 +80,8 @@ def main(prog_name: str, *argv: str) -> int:
                 return False
         elif args.fetcher == name:
             func(crates, distdir=args.distdir)
+        else:
+            return False
         return True
 
     if (not try_fetcher("aria2", fetch_crates_using_aria2) and
