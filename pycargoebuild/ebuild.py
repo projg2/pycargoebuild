@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import re
 import tarfile
 import typing
@@ -121,6 +122,13 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
         year=datetime.date.today().year)
 
 
+EBUILD_UPDATE_RE = re.compile(
+    r'^(.*\nCRATES=").*?("\n.*'
+    r"\n# Dependent crate licenses"
+    r'\nLICENSE[+]=").*?("\n.*)$',
+    re.DOTALL)
+
+
 def update_ebuild(ebuild: str,
                   pkg_meta: PackageMetadata,
                   crate_files: typing.Iterable[Path]
@@ -129,39 +137,13 @@ def update_ebuild(ebuild: str,
     Update the CRATES and LICENSE in an existing ebuild
     """
 
-    crates_re = re.compile(r'^CRATES="(.*?)"$', re.DOTALL | re.MULTILINE)
-    crates_m = list(crates_re.finditer(ebuild))
-    if not crates_m:
-        raise RuntimeError("CRATES variable not found in ebuild")
-    elif len(crates_m) > 1:
-        raise RuntimeError("Multiple CRATES variables found in ebuild")
-    crates, = crates_m
+    match = EBUILD_UPDATE_RE.match(ebuild)
+    if match is None:
+        raise RuntimeError(
+            "File not recognized as pycargoebuild ebuild")
 
-    license_re = re.compile(
-        r'^# Dependent crate licenses\nLICENSE[+]="(.*?)"$',
-        re.DOTALL | re.MULTILINE)
-    license_m = list(license_re.finditer(ebuild))
-    if not license_m:
-        raise RuntimeError("Crate LICENSE+= not found in ebuild (or missing "
-                           "marker comment)")
-    elif len(license_m) > 1:
-        raise RuntimeError("Multiple crate LICENSE+= found in ebuild")
-    license, = license_m
-
-    if crates.start(0) < license.start(0):
-        if crates.end(0) > license.start(0):
-            raise RuntimeError("CRATES and LICENSE+= overlap!")
-    else:
-        if crates.end(0) < license.start(0):
-            raise RuntimeError("CRATES and LICENSE+= overlap!")
-
-    first_match_start = min(crates.start(1), license.start(1))
-    first_match_end = min(crates.end(1), license.end(1))
-    second_match_start = max(crates.start(1), license.start(1))
-    second_match_end = max(crates.end(1), license.end(1))
-
-    return (ebuild[:first_match_start] +
-            get_CRATES(crate_files) +
-            ebuild[first_match_end:second_match_start] +
-            get_crate_LICENSE(crate_files) +
-            ebuild[second_match_end:])
+    assert len(match.groups()) == 3
+    return "".join(itertools.chain(
+        *zip(match.groups(), (get_CRATES(crate_files),
+                              get_crate_LICENSE(crate_files),
+                              ""))))
