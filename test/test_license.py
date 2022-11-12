@@ -4,10 +4,8 @@ import unittest.mock
 import license_expression
 import pytest
 
-from pycargoebuild.license import (load_license_mapping,
-                                   spdx_to_ebuild,
-                                   symbol_to_ebuild,
-                                   )
+from pycargoebuild.license import spdx_to_ebuild, symbol_to_ebuild
+
 
 TEST_LICENSE_MAPPING = {
     # keys are lowercase in MAPPING
@@ -68,12 +66,6 @@ def test_spdx_to_ebuild(spdx, value):
     assert spdx_to_ebuild(parsed_license) == SPDX_TEST_VALUES[value]
 
 
-@pytest.fixture(scope="module")
-def real_mapping() -> typing.Generator[None, None, None]:
-    load_license_mapping()
-    yield
-
-
 @pytest.mark.parametrize("value", REAL_MAPPING_TEST_VALUES)
-def test_real_license_mapping(real_mapping, value):
+def test_real_license_mapping(real_license_mapping, value):
     assert symbol_to_ebuild(value) == REAL_MAPPING_TEST_VALUES[value]

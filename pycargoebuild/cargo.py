@@ -28,9 +28,9 @@ Crates = typing.List[Crate]
 class PackageMetadata(typing.NamedTuple):
     name: str
     version: str
-    license: typing.Optional[str]
-    description: typing.Optional[str]
-    homepage: typing.Optional[str]
+    license: typing.Optional[str] = None
+    description: typing.Optional[str] = None
+    homepage: typing.Optional[str] = None
 
 
 def cargo_to_spdx(license_str: str) -> str:
