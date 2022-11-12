@@ -1,5 +1,7 @@
 import hashlib
 import subprocess
+import typing
+
 from pathlib import Path
 
 from pycargoebuild.cargo import Crates
@@ -19,17 +21,26 @@ def fetch_crates_using_aria2(crates: Crates, distdir: Path) -> None:
             ["aria2c", "-Z", "-d", str(distdir)] + crate_urls)
 
 
+def fetch_files_using_wget(files: typing.Iterable[typing.Tuple[str, Path]]
+                           ) -> None:
+    """
+    Fetch specified URLs to the specified filenames using wget(1)
+    """
+
+    for url, path in files:
+        if not path.exists():
+            subprocess.check_call(
+                ["wget", "-O", str(path), url])
+
+
 def fetch_crates_using_wget(crates: Crates, distdir: Path) -> None:
     """
     Fetch specified crates into distdir using wget(1)
     """
 
     distdir.mkdir(parents=True, exist_ok=True)
-    for crate in crates:
-        path = distdir / crate.filename
-        if not path.exists():
-            subprocess.check_call(
-                ["wget", "-O", str(path), crate.crates_io_url])
+    fetch_files_using_wget(
+        (crate.crates_io_url, distdir / crate.filename) for crate in crates)
 
 
 def verify_crates(crates: Crates, distdir: Path) -> None:
