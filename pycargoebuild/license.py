@@ -1,5 +1,6 @@
 import configparser
 import importlib.resources
+import sys
 import typing
 
 import license_expression
@@ -13,8 +14,15 @@ def load_license_mapping() -> None:
                                      delimiters=("=",),
                                      empty_lines_in_values=False,
                                      interpolation=None)
-    with importlib.resources.open_text(__package__,
-                                       "license-mapping.conf") as f:
+
+    if sys.version_info >= (3, 9):
+        f = ((importlib.resources.files(__package__) / "license-mapping.conf")
+             .open("r"))
+
+    else:
+        f = importlib.resources.open_text(__package__, "license-mapping.conf")
+
+    with f:
         conf.read_file(f)
 
     MAPPING.update((k.lower(), v) for k, v in conf.items("spdx-to-ebuild"))
