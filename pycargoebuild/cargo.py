@@ -57,11 +57,11 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     pkg_meta = cargo_toml["package"]
     if "license_file" in pkg_meta:
         raise NotImplementedError("license_file metadata key not supported")
-    license = pkg_meta.get("license")
-    if license is not None:
-        license = cargo_to_spdx(license)
+    pkg_license = pkg_meta.get("license")
+    if pkg_license is not None:
+        pkg_license = cargo_to_spdx(pkg_license)
     return PackageMetadata(name=pkg_meta["name"],
                            version=pkg_meta["version"],
-                           license=license,
+                           license=pkg_license,
                            description=pkg_meta.get("description"),
                            homepage=pkg_meta.get("homepage"))
