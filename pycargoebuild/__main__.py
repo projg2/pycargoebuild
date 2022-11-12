@@ -31,14 +31,14 @@ def main(prog_name: str, *argv: str) -> int:
                       default="auto",
                       help="Fetcher to use (one of: auto [default], "
                            f"{', '.join(FETCHERS)})")
-    argp.add_argument("-i", "--inplace",
+    argp.add_argument("-i", "--input", "--inplace",
                       type=argparse.FileType("r", encoding="utf-8"),
                       metavar="INPUT",
                       help="Update the CRATES and LICENSE variables "
                            "in the specified ebuild instead of creating "
                            "one from scratch")
     argp.add_argument("-o", "--output",
-                      help="Ebuild file to write (default: INPUT if --inplace "
+                      help="Ebuild file to write (default: INPUT if --input "
                            "is specified, {name}-{version}.ebuild otherwise)")
     argp.add_argument("directory",
                       type=Path,
@@ -53,9 +53,9 @@ def main(prog_name: str, *argv: str) -> int:
     with open(args.directory / "Cargo.lock", "rb") as f:
         crates = get_crates(f, exclude=[pkg_meta.name])
 
-    if args.inplace is not None and args.output is None:
+    if args.input is not None and args.output is None:
         # default to overwriting the input file
-        outfile = Path(args.inplace.name)
+        outfile = Path(args.input.name)
     else:
         if args.output is None:
             args.output = "{name}-{version}.ebuild"
@@ -91,9 +91,9 @@ def main(prog_name: str, *argv: str) -> int:
     verify_crates(crates, distdir=args.distdir)
     crate_files = [args.distdir / crate.filename for crate in crates]
 
-    if args.inplace is not None:
-        ebuild = update_ebuild(args.inplace.read(), pkg_meta, crate_files)
-        args.inplace.close()
+    if args.input is not None:
+        ebuild = update_ebuild(args.input.read(), pkg_meta, crate_files)
+        args.input.close()
     else:
         ebuild = get_ebuild(pkg_meta, crate_files)
 
