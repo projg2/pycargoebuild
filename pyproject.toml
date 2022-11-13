@@ -16,6 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+pretty-log = ["rich"]
 test = [
     "pytest",
 ]
@@ -43,6 +44,7 @@ check_untyped_defs = true
 module = [
     "license_expression.*",
     "portage.*",
+    "rich.*",
 ]
 ignore_missing_imports = true
 
