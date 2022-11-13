@@ -65,8 +65,8 @@ def test_get_ebuild(real_license_mapping, pkg_meta, crates):
         EAPI=8
 
         CRATES="
-        \tfoo-1
         \tbar-2
+        \tfoo-1
         "
 
         inherit cargo
@@ -100,8 +100,8 @@ def test_get_ebuild_no_license(real_license_mapping, crates):
         EAPI=8
 
         CRATES="
-        \tfoo-1
         \tbar-2
+        \tfoo-1
         "
 
         inherit cargo
@@ -175,8 +175,8 @@ def test_update_ebuild(real_license_mapping, pkg_meta, crates):
         EAPI=8
 
         CRATES="
-        \tfoo-1
         \tbar-2
+        \tfoo-1
         "
 
         inherit cargo

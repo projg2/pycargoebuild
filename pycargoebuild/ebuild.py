@@ -46,7 +46,9 @@ def get_CRATES(crate_files: typing.Iterable[Path]) -> str:
     """
     if not crate_files:
         return ""
-    return "\n" + "\n".join(f"\t{p.name[:-6]}" for p in crate_files) + "\n"
+    return ("\n" +
+            "\n".join(f"\t{p.name[:-6]}" for p in sorted(crate_files)) +
+            "\n")
 
 
 def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
