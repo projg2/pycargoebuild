@@ -1,9 +1,9 @@
 import datetime
-import itertools
 import re
 import tarfile
 import typing
 
+from functools import partial
 from pathlib import Path
 
 import license_expression
@@ -124,11 +124,30 @@ def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
         year=datetime.date.today().year)
 
 
-EBUILD_UPDATE_RE = re.compile(
-    r'^(.*\nCRATES=").*?("\n.*'
-    r"\n# Dependent crate licenses"
-    r'\nLICENSE[+]=").*?("\n.*)$',
-    re.DOTALL)
+CRATES_RE = re.compile(
+    r"^(?P<start>CRATES=(?P<delim>['\"])).*?(?P=delim)$",
+    re.DOTALL | re.MULTILINE)
+
+CRATE_LICENSE_RE = re.compile(
+    r"^(?P<start># Dependent crate licenses\n"
+    r"LICENSE[+]=(?P<delim>['\"])).*?(?P=delim)$",
+    re.DOTALL | re.MULTILINE)
+
+
+class CountingSubst:
+    def __init__(self, repl: typing.Callable[[], str]
+                 ) -> None:
+        self.count = 0
+        self.repl = repl
+
+    def __call__(self, match: re.Match) -> str:
+        self.count += 1
+        return match.group("start") + self.repl() + match.group("delim")
+
+    def assert_count(self, desc: str, expected: int) -> None:
+        if self.count != expected:
+            raise RuntimeError(
+                f"{desc} matched {self.count} times, {expected} expected")
 
 
 def update_ebuild(ebuild: str,
@@ -139,13 +158,13 @@ def update_ebuild(ebuild: str,
     Update the CRATES and LICENSE in an existing ebuild
     """
 
-    match = EBUILD_UPDATE_RE.match(ebuild)
-    if match is None:
-        raise RuntimeError(
-            "File not recognized as pycargoebuild ebuild")
+    crates_repl = CountingSubst(partial(get_CRATES, crate_files))
+    crate_license_repl = CountingSubst(partial(get_crate_LICENSE, crate_files))
 
-    assert len(match.groups()) == 3
-    return "".join(itertools.chain(
-        *zip(match.groups(), (get_CRATES(crate_files),
-                              get_crate_LICENSE(crate_files),
-                              ""))))
+    ebuild = CRATE_LICENSE_RE.sub(crate_license_repl,
+                                  CRATES_RE.sub(crates_repl, ebuild))
+
+    crates_repl.assert_count("CRATES=", 1)
+    crate_license_repl.assert_count("Crate LICENSE+=", 1)
+
+    return ebuild

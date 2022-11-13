@@ -193,3 +193,38 @@ def test_update_ebuild(real_license_mapping, pkg_meta, crates):
         SLOT="0"
         KEYWORDS="~amd64 ~x86"
     """)
+
+
+BAD_UPDATE_TEST_CASES = {
+    "empty": "",
+    "double-crates": textwrap.dedent("""\
+        CRATES=""
+        # Dependent crate licenses
+        LICENSE+=""
+        CRATES=""
+    """),
+    "no-crates": textwrap.dedent("""\
+        # Dependent crate licenses
+        LICENSE+=""
+    """),
+    "double-license": textwrap.dedent("""\
+        CRATES=""
+        # Dependent crate licenses
+        LICENSE+=""
+        # Dependent crate licenses
+        LICENSE+=""
+    """),
+    "no-license": textwrap.dedent("""\
+        CRATES=""
+    """),
+    "no-license-comment": textwrap.dedent("""\
+        CRATES=""
+        LICENSE+=""
+    """),
+}
+
+
+@pytest.mark.parametrize("case", BAD_UPDATE_TEST_CASES)
+def test_update_ebuild_fail(real_license_mapping, pkg_meta, crates, case):
+    with pytest.raises(RuntimeError):
+        update_ebuild(BAD_UPDATE_TEST_CASES[case], pkg_meta, crates)
