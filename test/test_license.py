@@ -14,6 +14,9 @@ TEST_LICENSE_MAPPING = {
     "c": "Cm",
     "a with exc": "A-EXC",
     "b with exc": "B-EXC",
+
+    "a+": "|| ( A B )",
+    "multi": "A B",
 }
 
 SPDX_TEST_SYMBOLS = [
@@ -42,6 +45,13 @@ SPDX_TEST_VALUES = {
     "A WITH EXC OR B": "|| ( A-EXC B )",
     "A AND B WITH EXC": "A B-EXC",
     "A OR B WITH EXC": "|| ( A B-EXC )",
+
+    "A+": "|| ( A B )",
+    "A+ OR C": "|| ( A B Cm )",
+    "A+ AND C": "|| ( A B ) Cm",
+    "MULTI": "A B",
+    "MULTI OR C": "|| ( ( A B ) Cm )",
+    "MULTI AND C": "A B Cm",
 }
 
 REAL_MAPPING_TEST_VALUES = {
