@@ -21,6 +21,27 @@ a template or to update the values of ``CRATES`` and ``LICENSE``
 in an existing ebuild.
 
 
+Why not cargo-ebuild?
+=====================
+pycargoebuild has the following features that cargo-ebuild 0.5.2
+is missing:
+
+- small size (cargo-ebuild compiles to 5.5M on my system)
+
+- full support for SPDX-2.0 license expressions with boolean
+  simplification (whereas cargo-ebuild just dumps all licenses it finds)
+
+- pretty-printing with line wrapping for license expressions
+
+- support for updating ``CRATES`` and crate ``LICENSE`` in existing
+  ebuilds (whereas cargo-ebuild can only generate new ebuilds)
+
+- support for combining the data from multiple subpackages (useful
+  e.g. in setuptools-rust)
+
+- support for fast crate fetching if ``aria2c`` is installed
+
+
 Usage
 =====
 To create a new ebuild, run::
