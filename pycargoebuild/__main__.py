@@ -7,7 +7,7 @@ import typing
 
 from pathlib import Path
 
-from pycargoebuild.cargo import get_crates, get_package_metadata
+from pycargoebuild.cargo import Crate, get_crates, get_package_metadata
 from pycargoebuild.ebuild import get_ebuild, update_ebuild
 from pycargoebuild.fetch import (fetch_crates_using_wget,
                                  fetch_crates_using_aria2,
@@ -43,21 +43,40 @@ def main(prog_name: str, *argv: str) -> int:
                            "is specified, {name}-{version}.ebuild otherwise)")
     argp.add_argument("directory",
                       type=Path,
-                      default=Path("."),
-                      nargs="?",
+                      default=[Path(".")],
+                      nargs="*",
                       help="Directory containing Cargo.* files (default: .)")
     args = argp.parse_args(argv)
 
     load_license_mapping()
-    with open(args.directory / "Cargo.toml", "rb") as f:
-        pkg_meta = get_package_metadata(f)
-    with open(args.directory / "Cargo.lock", "rb") as f:
-        crates = frozenset(get_crates(f, exclude=[pkg_meta.name]))
+
+    crates: typing.Set[Crate] = set()
+    pkg_metas = []
+    for directory in args.directory:
+        with open(directory / "Cargo.toml", "rb") as f:
+            pkg_metas.append(get_package_metadata(f))
+        with open(directory / "Cargo.lock", "rb") as f:
+            crates.update(get_crates(f, exclude=[pkg_metas[-1].name]))
+    pkg_meta = pkg_metas[0]
+
+    # Combine licenses of multiple packages
+    if len(args.directory) > 1:
+        combined_license = " AND ".join(f"( {pkg.license} )"
+                                        for pkg in pkg_metas
+                                        if pkg.license is not None)
+        pkg_meta = pkg_meta.with_replaced_license(
+            combined_license or None)
 
     if args.input is not None and args.output is None:
         # default to overwriting the input file
         outfile = Path(args.input.name)
     else:
+        # This warning is only relevant when constructing a new ebuild,
+        # as otherwise we do not update other metadata.
+        if len(args.directory) > 1:
+            logging.warning(
+                "Multiple directories passed, all metadata except for LICENSE "
+                f"will be taken from the first package, {pkg_meta.name}")
         if args.output is None:
             args.output = "{name}-{version}.ebuild"
         outfile = Path(args.output.format(name=pkg_meta.name,

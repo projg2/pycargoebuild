@@ -29,6 +29,14 @@ class PackageMetadata(typing.NamedTuple):
     description: typing.Optional[str] = None
     homepage: typing.Optional[str] = None
 
+    def with_replaced_license(self, new_license: typing.Optional[str]
+                              ) -> "PackageMetadata":
+        return PackageMetadata(name=self.name,
+                               version=self.version,
+                               license=new_license,
+                               description=self.description,
+                               homepage=self.homepage)
+
 
 def cargo_to_spdx(license_str: str) -> str:
     """

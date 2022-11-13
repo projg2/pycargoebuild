@@ -26,6 +26,22 @@ PACKAGES = {
                  "f734735b49ee45b11324d85efc4d5cbd",
         directories=["cryptography-38.0.3/src/rust"],
         expected_filename="cryptography-rust-0.1.0.ebuild"),
+    # FIXME: we need a way to skip crate licenses since crates are used only
+    # for tests here
+    "setuptools-rust-1.5.2.ebuild": Package(
+        url="https://files.pythonhosted.org/packages/99/db/"
+            "e4ecb483ffa194d632ed44bda32cb740e564789fed7e56c2be8e2a0e2aa6/"
+            "setuptools-rust-1.5.2.tar.gz",
+        checksum="d8daccb14dc0eae1b6b6eb3ecef79675"
+                 "bd37b4065369f79c35393dd5c55652c7",
+        directories=[f"setuptools-rust-1.5.2/examples/{x}"
+                     for x in ["hello-world",
+                               "hello-world-script",
+                               "html-py-ever",
+                               "namespace_package",
+                               "rust_with_cffi",
+                               ]],
+        expected_filename="hello-world-0.1.0.ebuild"),
     "watchfiles-0.18.1.ebuild": Package(
         url="https://files.pythonhosted.org/packages/5e/6a/"
             "2760278f309655cc7305392b0bb664738104202bf5d50396eb138258c5ca/"
