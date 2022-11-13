@@ -24,7 +24,7 @@ test = [
 pycargoebuild = "pycargoebuild.__main__:entry_point"
 
 [project.urls]
-Home = "https://github.com/projg2/pycargoebuild/"
+Homepage = "https://github.com/projg2/pycargoebuild/"
 
 [tool.mypy]
 disallow_untyped_defs = true
