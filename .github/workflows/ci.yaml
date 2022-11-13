@@ -5,6 +5,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11.0-alpha - 3.11", "pypy-3.8", "pypy-3.9"]
+        suite: ["py", "integration"]
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
@@ -17,7 +18,7 @@ jobs:
       - name: Install tox
         run: pip install tox
       - name: Test using tox
-        run: tox -e py
+        run: tox -e ${{ matrix.suite }}
   qa:
     runs-on: ubuntu-latest
     steps:
