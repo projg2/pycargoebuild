@@ -1,7 +1,7 @@
 name: CI
 on: [push, pull_request]
 jobs:
-  build:
+  ci:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11.0-alpha - 3.11", "pypy-3.8", "pypy-3.9"]
