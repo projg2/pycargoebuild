@@ -1,5 +1,6 @@
 import hashlib
 import subprocess
+import sys
 import typing
 
 from pathlib import Path
@@ -18,7 +19,8 @@ def fetch_crates_using_aria2(crates: Crates, distdir: Path) -> None:
                   if not (distdir / crate.filename).exists()]
     if crate_urls:
         subprocess.check_call(
-            ["aria2c", "-Z", "-d", str(distdir)] + crate_urls)
+            ["aria2c", "-Z", "-d", str(distdir)] + crate_urls,
+            stdout=sys.stderr)
 
 
 def fetch_files_using_wget(files: typing.Iterable[typing.Tuple[str, Path]]
@@ -30,7 +32,8 @@ def fetch_files_using_wget(files: typing.Iterable[typing.Tuple[str, Path]]
     for url, path in files:
         if not path.exists():
             subprocess.check_call(
-                ["wget", "-O", str(path), url])
+                ["wget", "-O", str(path), url],
+                stdout=sys.stderr)
 
 
 def fetch_crates_using_wget(crates: Crates, distdir: Path) -> None:
