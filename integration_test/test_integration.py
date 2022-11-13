@@ -53,6 +53,11 @@ PACKAGES = {
 }
 
 
+def normalize_ebuild(path: Path) -> str:
+    """Strip the dynamic ebuild header for comparison"""
+    return "".join(path.read_text(encoding="utf-8").partition("EAPI=")[1:])
+
+
 @pytest.mark.parametrize("ebuild", PACKAGES)
 def test_integration(tmp_path, capfd, ebuild):
     pkg_info = PACKAGES[ebuild]
@@ -79,6 +84,5 @@ def test_integration(tmp_path, capfd, ebuild):
         ) == 0
     stdout, _ = capfd.readouterr()
     assert stdout == str(tmp_path / pkg_info.expected_filename) + "\n"
-    assert (
-        (tmp_path / pkg_info.expected_filename).read_text(encoding="utf-8") ==
-        (test_dir / ebuild).read_text(encoding="utf-8"))
+    assert (normalize_ebuild(tmp_path / pkg_info.expected_filename) ==
+            normalize_ebuild(test_dir / ebuild))
