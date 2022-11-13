@@ -110,7 +110,7 @@ def main(prog_name: str, *argv: str) -> int:
         raise
     Path(outf.name).rename(outfile)
 
-    print(f"{outfile}", file=sys.stderr)
+    print(f"{outfile}")
     return 0
 
 
