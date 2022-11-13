@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os.path
 import sys
 import tempfile
@@ -96,6 +97,9 @@ def main(prog_name: str, *argv: str) -> int:
     if args.input is not None:
         ebuild = update_ebuild(args.input.read(), pkg_meta, crate_files)
         args.input.close()
+        logging.warning(
+            "The in-place mode updates CRATES and crate LICENSE+= variables "
+            "only, other metadata is left unchanged")
     else:
         ebuild = get_ebuild(pkg_meta, crate_files)
 
