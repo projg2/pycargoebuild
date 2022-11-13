@@ -38,15 +38,15 @@ def cargo_to_spdx(license_str: str) -> str:
 
 
 def get_crates(f: typing.BinaryIO, exclude: typing.Container[str]
-               ) -> typing.List[Crate]:
+               ) -> typing.Generator[Crate, None, None]:
     """Read crate list from the open ``Cargo.lock`` file"""
     cargo_lock = tomllib.load(f)
     if cargo_lock["version"] != 3:
         raise NotImplementedError(
             f"Cargo.lock version '{cargo_lock['version']} unsupported")
-    return [Crate(name=p["name"], version=p["version"], checksum=p["checksum"])
+    return (Crate(name=p["name"], version=p["version"], checksum=p["checksum"])
             for p in cargo_lock["package"]
-            if p["name"] not in exclude]
+            if p["name"] not in exclude)
 
 
 def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:

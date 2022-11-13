@@ -52,7 +52,7 @@ def main(prog_name: str, *argv: str) -> int:
     with open(args.directory / "Cargo.toml", "rb") as f:
         pkg_meta = get_package_metadata(f)
     with open(args.directory / "Cargo.lock", "rb") as f:
-        crates = get_crates(f, exclude=[pkg_meta.name])
+        crates = frozenset(get_crates(f, exclude=[pkg_meta.name]))
 
     if args.input is not None and args.output is None:
         # default to overwriting the input file
