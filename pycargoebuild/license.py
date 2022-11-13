@@ -1,5 +1,6 @@
 import configparser
 import importlib.resources
+import logging
 import sys
 import typing
 
@@ -29,7 +30,16 @@ def load_license_mapping() -> None:
 
 
 def symbol_to_ebuild(license_symbol: license_expression.LicenseSymbol) -> str:
-    return MAPPING[str(license_symbol).lower()]
+    full_key = str(license_symbol).lower()
+    no_plus = full_key.replace("+", "")
+    # if we do not have an exact match, check if it is a "+" expression
+    # and try a match without the "+" symbol
+    if full_key not in MAPPING and no_plus in MAPPING:
+        logging.warning(
+            f"No explicit entry for license {license_symbol} found, "
+            f"assuming {str(license_symbol).replace('+', '')}.")
+        return MAPPING[no_plus]
+    return MAPPING[full_key]
 
 
 def spdx_to_ebuild(spdx: license_expression.Renderable) -> str:

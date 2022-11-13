@@ -25,6 +25,8 @@ SPDX_TEST_SYMBOLS = [
     "C",
     "A+",
     "MULTI",
+    "B+",
+    "MULTI+",
     license_expression.LicenseSymbol("EXC", is_exception=True),
 ]
 
@@ -52,6 +54,11 @@ SPDX_TEST_VALUES = {
     "MULTI": "A B",
     "MULTI OR C": "|| ( ( A B ) Cm )",
     "MULTI AND C": "A B Cm",
+
+    "A+ WITH EXC": "A-EXC",
+    "B+": "B",
+    "B+ WITH EXC": "B-EXC",
+    "MULTI+": "A B",
 }
 
 REAL_MAPPING_TEST_VALUES = {
