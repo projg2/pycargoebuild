@@ -18,6 +18,14 @@ class Package(typing.NamedTuple):
 
 
 PACKAGES = {
+    "cryptography-38.0.3.ebuild": Package(
+        url="https://files.pythonhosted.org/packages/13/dd/"
+            "a9608b7aebe5d2dc0c98a4b2090a6b815628efa46cc1c046b89d8cd25f4c/"
+            "cryptography-38.0.3.tar.gz",
+        checksum="bfbe6ee19615b07a98b1d2287d6a6073"
+                 "f734735b49ee45b11324d85efc4d5cbd",
+        directories=["cryptography-38.0.3/src/rust"],
+        expected_filename="cryptography-rust-0.1.0.ebuild"),
     "watchfiles-0.18.1.ebuild": Package(
         url="https://files.pythonhosted.org/packages/5e/6a/"
             "2760278f309655cc7305392b0bb664738104202bf5d50396eb138258c5ca/"
