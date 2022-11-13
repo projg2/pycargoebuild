@@ -41,6 +41,9 @@ is missing:
 
 - support for fast crate fetching if ``aria2c`` is installed
 
+- support for skipping crate licenses (e.g. for when Crates are used
+  at build/test time only)
+
 
 Usage
 =====

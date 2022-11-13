@@ -38,6 +38,10 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Update the CRATES and LICENSE variables "
                            "in the specified ebuild instead of creating "
                            "one from scratch")
+    argp.add_argument("-L", "--no-license",
+                      action="store_true",
+                      help="Do not include LICENSEs (e.g. when crates are "
+                           "only used at build time")
     argp.add_argument("-o", "--output",
                       help="Ebuild file to write (default: INPUT if --input "
                            "is specified, {name}-{version}.ebuild otherwise)")
@@ -59,8 +63,10 @@ def main(prog_name: str, *argv: str) -> int:
             crates.update(get_crates(f, exclude=[pkg_metas[-1].name]))
     pkg_meta = pkg_metas[0]
 
-    # Combine licenses of multiple packages
-    if len(args.directory) > 1:
+    if args.no_license:
+        pkg_meta = pkg_meta.with_replaced_license(None)
+    elif len(args.directory) > 1:
+        # Combine licenses of multiple packages
         combined_license = " AND ".join(f"( {pkg.license} )"
                                         for pkg in pkg_metas
                                         if pkg.license is not None)
@@ -114,13 +120,18 @@ def main(prog_name: str, *argv: str) -> int:
     crate_files = [args.distdir / crate.filename for crate in crates]
 
     if args.input is not None:
-        ebuild = update_ebuild(args.input.read(), pkg_meta, crate_files)
+        ebuild = update_ebuild(args.input.read(),
+                               pkg_meta,
+                               crate_files,
+                               crate_license=not args.no_license)
         args.input.close()
         logging.warning(
             "The in-place mode updates CRATES and crate LICENSE+= variables "
             "only, other metadata is left unchanged")
     else:
-        ebuild = get_ebuild(pkg_meta, crate_files)
+        ebuild = get_ebuild(pkg_meta,
+                            crate_files,
+                            crate_license=not args.no_license)
 
     try:
         with tempfile.NamedTemporaryFile(mode="w",

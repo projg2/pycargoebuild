@@ -14,7 +14,7 @@ from pycargoebuild.format import format_license_var
 from pycargoebuild.license import spdx_to_ebuild
 
 
-EBUILD_TEMPLATE = """\
+EBUILD_TEMPLATE_START = """\
 # Copyright {year} Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
@@ -33,8 +33,14 @@ SRC_URI="
 "
 
 LICENSE="{pkg_license}"
+"""
+
+EBUILD_TEMPLATE_CRATE_LICENSE = """\
 # Dependent crate licenses
 LICENSE+="{crate_licenses}"
+"""
+
+EBUILD_TEMPLATE_END = """\
 SLOT="0"
 KEYWORDS="~amd64"
 """
@@ -109,12 +115,20 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
     return crate_licenses_str
 
 
-def get_ebuild(pkg_meta: PackageMetadata, crate_files: typing.Iterable[Path]
+def get_ebuild(pkg_meta: PackageMetadata,
+               crate_files: typing.Iterable[Path],
+               crate_license: bool = True,
                ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
     """
-    return EBUILD_TEMPLATE.format(
+
+    template = EBUILD_TEMPLATE_START
+    if crate_license:
+        template += EBUILD_TEMPLATE_CRATE_LICENSE
+    template += EBUILD_TEMPLATE_END
+
+    return template.format(
         crates=get_CRATES(crate_files),
         crate_licenses=get_crate_LICENSE(crate_files),
         description=pkg_meta.description or "",
@@ -152,7 +166,8 @@ class CountingSubst:
 
 def update_ebuild(ebuild: str,
                   pkg_meta: PackageMetadata,
-                  crate_files: typing.Iterable[Path]
+                  crate_files: typing.Iterable[Path],
+                  crate_license: bool = True,
                   ) -> str:
     """
     Update the CRATES and LICENSE in an existing ebuild
@@ -165,6 +180,7 @@ def update_ebuild(ebuild: str,
                                   CRATES_RE.sub(crates_repl, ebuild))
 
     crates_repl.assert_count("CRATES=", 1)
-    crate_license_repl.assert_count("Crate LICENSE+=", 1)
+    crate_license_repl.assert_count(
+        "Crate LICENSE+=", 1 if crate_license else 0)
 
     return ebuild

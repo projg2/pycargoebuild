@@ -92,7 +92,5 @@ SRC_URI="
 "
 
 LICENSE=""
-# Dependent crate licenses
-LICENSE+=" Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD MIT MPL-2.0"
 SLOT="0"
 KEYWORDS="~amd64"

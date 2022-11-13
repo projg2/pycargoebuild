@@ -15,6 +15,7 @@ class Package(typing.NamedTuple):
     checksum: str
     directories: typing.List[str]
     expected_filename: str
+    crate_license: bool = True
 
 
 PACKAGES = {
@@ -26,8 +27,6 @@ PACKAGES = {
                  "f734735b49ee45b11324d85efc4d5cbd",
         directories=["cryptography-38.0.3/src/rust"],
         expected_filename="cryptography-rust-0.1.0.ebuild"),
-    # FIXME: we need a way to skip crate licenses since crates are used only
-    # for tests here
     "setuptools-rust-1.5.2.ebuild": Package(
         url="https://files.pythonhosted.org/packages/99/db/"
             "e4ecb483ffa194d632ed44bda32cb740e564789fed7e56c2be8e2a0e2aa6/"
@@ -41,7 +40,8 @@ PACKAGES = {
                                "namespace_package",
                                "rust_with_cffi",
                                ]],
-        expected_filename="hello-world-0.1.0.ebuild"),
+        expected_filename="hello-world-0.1.0.ebuild",
+        crate_license=False),
     "watchfiles-0.18.1.ebuild": Package(
         url="https://files.pythonhosted.org/packages/5e/6a/"
             "2760278f309655cc7305392b0bb664738104202bf5d50396eb138258c5ca/"
@@ -77,11 +77,13 @@ def test_integration(tmp_path, capfd, ebuild):
                 assert member is not None
                 tarf.extract(member, tmp_path, set_attrs=False)
 
-    assert main(
-        "test", "-d", str(dist_dir),
-        "-o", str(tmp_path / "{name}-{version}.ebuild"),
-        *(str(tmp_path / directory) for directory in pkg_info.directories)
-        ) == 0
+    args = ["-d", str(dist_dir),
+            "-o", str(tmp_path / "{name}-{version}.ebuild")]
+    if not pkg_info.crate_license:
+        args.append("-L")
+    args += [str(tmp_path / directory) for directory in pkg_info.directories]
+
+    assert main("test", *args) == 0
     stdout, _ = capfd.readouterr()
     assert stdout == str(tmp_path / pkg_info.expected_filename) + "\n"
     assert (normalize_ebuild(tmp_path / pkg_info.expected_filename) ==
