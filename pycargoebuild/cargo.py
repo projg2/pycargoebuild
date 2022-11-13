@@ -22,9 +22,6 @@ class Crate(typing.NamedTuple):
                 "download")
 
 
-Crates = typing.List[Crate]
-
-
 class PackageMetadata(typing.NamedTuple):
     name: str
     version: str
@@ -40,7 +37,8 @@ def cargo_to_spdx(license_str: str) -> str:
     return license_str.replace("/", " OR ")
 
 
-def get_crates(f: typing.BinaryIO, exclude: typing.Container[str]) -> Crates:
+def get_crates(f: typing.BinaryIO, exclude: typing.Container[str]
+               ) -> typing.List[Crate]:
     """Read crate list from the open ``Cargo.lock`` file"""
     cargo_lock = tomllib.load(f)
     if cargo_lock["version"] != 3:
