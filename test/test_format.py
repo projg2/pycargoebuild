@@ -82,4 +82,5 @@ FORMAT_TESTS = {
 
 @pytest.mark.parametrize("value", FORMAT_TESTS)
 def test_format_license_var(value):
-    assert format_license_var(value, 'LICENSE="', 24) == FORMAT_TESTS[value]
+    assert format_license_var(value, prefix='LICENSE="', line_width=24
+                              ) == FORMAT_TESTS[value]

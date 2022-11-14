@@ -68,7 +68,7 @@ def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
                                         validate=True,
                                         strict=True)
         return format_license_var(spdx_to_ebuild(parsed_pkg_license),
-                                  'LICENSE="')
+                                  prefix='LICENSE="')
     return ""
 
 
@@ -108,7 +108,7 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
         return ""
     final_license = parsed_license.simplify()
     crate_licenses_str = format_license_var(spdx_to_ebuild(final_license),
-                                            'LICENSE+=" ')
+                                            prefix='LICENSE+=" ')
     # if it's not a multiline string, we need to prepend " "
     if not crate_licenses_str.startswith("\n"):
         crate_licenses_str = " " + crate_licenses_str
@@ -117,6 +117,7 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
 
 def get_ebuild(pkg_meta: PackageMetadata,
                crate_files: typing.Iterable[Path],
+               *,
                crate_license: bool = True,
                ) -> str:
     """
@@ -167,6 +168,7 @@ class CountingSubst:
 def update_ebuild(ebuild: str,
                   pkg_meta: PackageMetadata,
                   crate_files: typing.Iterable[Path],
+                  *,
                   crate_license: bool = True,
                   ) -> str:
     """

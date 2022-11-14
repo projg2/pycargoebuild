@@ -14,7 +14,8 @@ class Line(typing.NamedTuple):
     tokens: typing.List[str]
 
 
-def format_license_var(value: str, prefix: str, line_width: int = 72) -> str:
+def format_license_var(value: str, *, prefix: str, line_width: int = 72
+                       ) -> str:
     """
     Pretty-format and wrap value for use in LICENSE
 

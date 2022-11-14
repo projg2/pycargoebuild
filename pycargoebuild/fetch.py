@@ -8,7 +8,7 @@ from pathlib import Path
 from pycargoebuild.cargo import Crate
 
 
-def fetch_crates_using_aria2(crates: typing.Iterable[Crate], distdir: Path
+def fetch_crates_using_aria2(crates: typing.Iterable[Crate], *, distdir: Path
                              ) -> None:
     """
     Fetch specified crates into distdir using aria2c(1)
@@ -37,7 +37,7 @@ def fetch_files_using_wget(files: typing.Iterable[typing.Tuple[str, Path]]
                 stdout=sys.stderr)
 
 
-def fetch_crates_using_wget(crates: typing.Iterable[Crate], distdir: Path
+def fetch_crates_using_wget(crates: typing.Iterable[Crate], *, distdir: Path
                             ) -> None:
     """
     Fetch specified crates into distdir using wget(1)
@@ -69,7 +69,7 @@ def verify_files(files: typing.Iterable[typing.Tuple[Path, str]]) -> None:
                     f"{hasher.hexdigest()}, exp: {checksum}")
 
 
-def verify_crates(crates: typing.Iterable[Crate], distdir: Path) -> None:
+def verify_crates(crates: typing.Iterable[Crate], *, distdir: Path) -> None:
     """
     Verify checksums of crates fetched into distdir
     """
