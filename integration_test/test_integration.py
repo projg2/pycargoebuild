@@ -78,6 +78,7 @@ def test_integration(tmp_path, capfd, ebuild):
                 tarf.extract(member, tmp_path, set_attrs=False)
 
     args = ["-d", str(dist_dir),
+            "-l", str(test_dir / "license-mapping.conf"),
             "-o", str(tmp_path / "{name}-{version}.ebuild")]
     if not pkg_info.crate_license:
         args.append("-L")

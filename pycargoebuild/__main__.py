@@ -38,6 +38,10 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Update the CRATES and LICENSE variables "
                            "in the specified ebuild instead of creating "
                            "one from scratch")
+    argp.add_argument("-l", "--license-mapping",
+                      type=argparse.FileType("r", encoding="utf-8"),
+                      help="Path to license-mapping.conf file (default: "
+                           "get from Portage)")
     argp.add_argument("-L", "--no-license",
                       action="store_true",
                       help="Do not include LICENSEs (e.g. when crates are "
@@ -52,7 +56,19 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Directory containing Cargo.* files (default: .)")
     args = argp.parse_args(argv)
 
-    load_license_mapping()
+    if args.distdir is None or args.license_mapping is None:
+        from portage import create_trees
+        trees = create_trees()
+        tree = trees[max(trees)]
+        if args.distdir is None:
+            args.distdir = Path(tree["porttree"].settings["DISTDIR"])
+        if args.license_mapping is None:
+            repo = Path(tree["porttree"].dbapi.repositories["gentoo"].location)
+            args.license_mapping = open(repo / "metadata/license-mapping.conf",
+                                        "r", encoding="utf-8")
+
+    load_license_mapping(args.license_mapping)
+    args.license_mapping.close()
 
     crates: typing.Set[Crate] = set()
     pkg_metas = []
@@ -91,12 +107,6 @@ def main(prog_name: str, *argv: str) -> int:
             print(f"{outfile} exists already, pass -f to overwrite it",
                   file=sys.stderr)
             return 1
-
-    if args.distdir is None:
-        from portage import create_trees
-        trees = create_trees()
-        tree = trees[max(trees)]
-        args.distdir = Path(tree["porttree"].settings["DISTDIR"])
 
     def try_fetcher(name: str, func: typing.Callable[..., None]) -> bool:
         if args.fetcher == "auto":

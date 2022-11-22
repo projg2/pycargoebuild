@@ -1,7 +1,5 @@
 import configparser
-import importlib.resources
 import logging
-import sys
 import typing
 
 import license_expression
@@ -10,22 +8,13 @@ import license_expression
 MAPPING: typing.Dict[str, str] = {}
 
 
-def load_license_mapping() -> None:
+def load_license_mapping(f: typing.IO["str"]) -> None:
+    """Read license mapping from the specified file"""
     conf = configparser.ConfigParser(comment_prefixes=("#",),
                                      delimiters=("=",),
                                      empty_lines_in_values=False,
                                      interpolation=None)
-
-    if sys.version_info >= (3, 9):
-        f = ((importlib.resources.files(__package__) / "license-mapping.conf")
-             .open("r"))
-
-    else:
-        f = importlib.resources.open_text(__package__, "license-mapping.conf")
-
-    with f:
-        conf.read_file(f)
-
+    conf.read_file(f)
     MAPPING.update((k.lower(), v) for k, v in conf.items("spdx-to-ebuild"))
 
 
