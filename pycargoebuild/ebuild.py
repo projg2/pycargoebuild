@@ -183,6 +183,6 @@ def update_ebuild(ebuild: str,
 
     crates_repl.assert_count("CRATES=", 1)
     crate_license_repl.assert_count(
-        "Crate LICENSE+=", 1 if crate_license else 0)
+        "Crate LICENSE+= (with marker comment)", 1 if crate_license else 0)
 
     return ebuild
