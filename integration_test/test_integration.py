@@ -35,6 +35,14 @@ PACKAGES = {
                  "e063ceb61236833ad656e2da9953a387",
         directories=["qiskit-terra-0.22.3"],
         expected_filename="qiskit-terra-0.22.3.ebuild"),
+    "rustworkx-0.12.1.ebuild": Package(
+        url="https://files.pythonhosted.org/packages/17/e6/"
+            "924967efd523c0bfed2868b62c334a3339f21fba0ac4b447089731312159/"
+            "rustworkx-0.12.1.tar.gz",
+        checksum="13a19a2f64dff086b3bffffb294c4630"
+                 "100ecbc13634b4995d9d36a481ae130e",
+        directories=["rustworkx-0.12.1"],
+        expected_filename="rustworkx-0.12.1.ebuild"),
     "setuptools-rust-1.5.2.ebuild": Package(
         url="https://files.pythonhosted.org/packages/99/db/"
             "e4ecb483ffa194d632ed44bda32cb740e564789fed7e56c2be8e2a0e2aa6/"
