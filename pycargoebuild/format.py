@@ -112,7 +112,8 @@ def format_license_var(value: str, *, prefix: str, line_width: int = 72
     wrapper = TextWrapper(expand_tabs=False,
                           replace_whitespace=False,
                           drop_whitespace=True,
-                          break_long_words=False)
+                          break_long_words=False,
+                          break_on_hyphens=False)
     for line in lines:
         wrapper.width = line_width - line.indent * 4
         for wrapped_line in wrapper.wrap(" ".join(line.tokens)):
