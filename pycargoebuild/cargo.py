@@ -52,7 +52,17 @@ def get_crates(f: typing.BinaryIO, *, exclude: typing.Container[str]
     if cargo_lock["version"] != 3:
         raise NotImplementedError(
             f"Cargo.lock version '{cargo_lock['version']} unsupported")
-    return (Crate(name=p["name"], version=p["version"], checksum=p["checksum"])
+
+    def crate_from_cargo_lock(p: dict) -> Crate:
+        try:
+            return Crate(name=p["name"],
+                         version=p["version"],
+                         checksum=p["checksum"])
+        except KeyError as e:
+            raise RuntimeError("Incorrect/insufficient metadata for crate: "
+                               f"{p!r}") from e
+
+    return (crate_from_cargo_lock(p)
             for p in cargo_lock["package"]
             if p["name"] not in exclude)
 
