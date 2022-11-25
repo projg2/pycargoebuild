@@ -28,6 +28,7 @@ class PackageMetadata(typing.NamedTuple):
     license: typing.Optional[str] = None
     description: typing.Optional[str] = None
     homepage: typing.Optional[str] = None
+    workspace_members: typing.List[str] = []
 
     def with_replaced_license(self, new_license: typing.Optional[str]
                               ) -> "PackageMetadata":
@@ -35,7 +36,8 @@ class PackageMetadata(typing.NamedTuple):
                                version=self.version,
                                license=new_license,
                                description=self.description,
-                               homepage=self.homepage)
+                               homepage=self.homepage,
+                               workspace_members=list(self.workspace_members))
 
 
 def cargo_to_spdx(license_str: str) -> str:
@@ -76,8 +78,10 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     pkg_license = pkg_meta.get("license")
     if pkg_license is not None:
         pkg_license = cargo_to_spdx(pkg_license)
-    return PackageMetadata(name=pkg_meta["name"],
-                           version=pkg_meta["version"],
-                           license=pkg_license,
-                           description=pkg_meta.get("description"),
-                           homepage=pkg_meta.get("homepage"))
+    return PackageMetadata(
+        name=pkg_meta["name"],
+        version=pkg_meta["version"],
+        license=pkg_license,
+        description=pkg_meta.get("description"),
+        homepage=pkg_meta.get("homepage"),
+        workspace_members=cargo_toml.get("workspace", {}).get("members", []))

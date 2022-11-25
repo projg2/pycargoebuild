@@ -39,3 +39,22 @@ def test_get_package_metadata(exclude):
 
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
             PackageMetadata(**data))  # type: ignore
+
+
+def test_get_package_metadata_workspace():
+    input_toml = """
+        [package]
+        name = "test"
+        version = "0"
+
+        [workspace]
+        members = [
+            "foo",
+            "bar",
+        ]
+    """
+
+    assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
+            PackageMetadata(name="test",
+                            version="0",
+                            workspace_members=["foo", "bar"]))

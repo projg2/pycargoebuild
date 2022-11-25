@@ -75,8 +75,9 @@ def main(prog_name: str, *argv: str) -> int:
     for directory in args.directory:
         with open(directory / "Cargo.toml", "rb") as f:
             pkg_metas.append(get_package_metadata(f))
+        exclude = [pkg_metas[-1].name] + pkg_metas[-1].workspace_members
         with open(directory / "Cargo.lock", "rb") as f:
-            crates.update(get_crates(f, exclude=[pkg_metas[-1].name]))
+            crates.update(get_crates(f, exclude=exclude))
     pkg_meta = pkg_metas[0]
 
     if args.no_license:
