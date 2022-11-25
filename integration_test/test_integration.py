@@ -27,6 +27,14 @@ PACKAGES = {
                  "f734735b49ee45b11324d85efc4d5cbd",
         directories=["cryptography-38.0.3/src/rust"],
         expected_filename="cryptography-rust-0.1.0.ebuild"),
+    "qiskit-terra-0.22.3.ebuild": Package(
+        url="https://files.pythonhosted.org/packages/98/11/"
+            "afb20dd5af0fcf9d5ca57e4cfb2b0b3b1e73fa9dcd39ece82389b77f428a/"
+            "qiskit-terra-0.22.3.tar.gz",
+        checksum="4dfd246177883c6d1908ff532e384e9a"
+                 "e063ceb61236833ad656e2da9953a387",
+        directories=["qiskit-terra-0.22.3"],
+        expected_filename="qiskit-terra-0.22.3.ebuild"),
     "setuptools-rust-1.5.2.ebuild": Package(
         url="https://files.pythonhosted.org/packages/99/db/"
             "e4ecb483ffa194d632ed44bda32cb740e564789fed7e56c2be8e2a0e2aa6/"
