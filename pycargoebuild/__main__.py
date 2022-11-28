@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os.path
+import shutil
 import sys
 import tempfile
 import typing
@@ -135,7 +136,6 @@ def main(prog_name: str, *argv: str) -> int:
                                pkg_meta,
                                crate_files,
                                crate_license=not args.no_license)
-        args.input.close()
         logging.warning(
             "The in-place mode updates CRATES and crate LICENSE+= variables "
             "only, other metadata is left unchanged")
@@ -149,6 +149,12 @@ def main(prog_name: str, *argv: str) -> int:
                                          encoding="utf-8",
                                          dir=outfile.parent,
                                          delete=False) as outf:
+            if args.input is not None:
+                # typeshed is missing fd support in shutil.copymode()
+                # https://github.com/python/typeshed/issues/9288
+                shutil.copymode(args.input.fileno(),
+                                outf.fileno())  # type: ignore
+                args.input.close()
             outf.write(ebuild)
     except Exception:
         Path(outf.name).unlink()
