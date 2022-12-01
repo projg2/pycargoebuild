@@ -66,6 +66,14 @@ PACKAGES = {
                  "2a8ee9c720e0b46fc5b7bab472b7c6d4",
         directories=["watchfiles-0.18.1"],
         expected_filename="watchfiles_rust_notify-0.18.1.ebuild"),
+    "synapse-0.1.0.ebuild": Package(
+        url="https://files.pythonhosted.org/packages/2b/a0/"
+            "fda30d4ec70be0ce89db13c121a1ea72127f91b0b2d6ef6a2f27a1bb61f3/"
+            "matrix_synapse-1.72.0.tar.gz",
+        checksum="52fd58ffd0865793eb96f4c959c971eb"
+                 "e724881863ab0dafca445baf89d21714",
+        directories=["matrix_synapse-1.72.0/rust"],
+        expected_filename="synapse-0.1.0.ebuild"),
 }
 
 
@@ -88,10 +96,16 @@ def test_integration(tmp_path, capfd, ebuild):
     verify_files([(dist_file, pkg_info.checksum)])
     with tarfile.open(dist_file, "r") as tarf:
         for directory in pkg_info.directories:
-            for filename in ("Cargo.lock", "Cargo.toml"):
-                member = tarf.getmember(f"{directory}/{filename}")
+            member = tarf.getmember(f"{directory}/Cargo.toml")
+            tarf.extract(member, tmp_path, set_attrs=False)
+            for current in (Path(directory) / "Cargo.lock").parents:
+                try:
+                    member = tarf.getmember(f"{current}/Cargo.lock")
+                except KeyError:
+                    continue
                 assert member is not None
                 tarf.extract(member, tmp_path, set_attrs=False)
+                break
 
     args = ["-d", str(dist_dir),
             "-l", str(test_dir / "license-mapping.conf"),
