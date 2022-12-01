@@ -1,4 +1,5 @@
 import argparse
+import io
 import logging
 import os.path
 import shutil
@@ -71,13 +72,31 @@ def main(prog_name: str, *argv: str) -> int:
     load_license_mapping(args.license_mapping)
     args.license_mapping.close()
 
+    def iterate_parents(directory: Path) -> typing.Generator[Path, None, None]:
+        root = directory.absolute().root
+        yield directory
+        while not directory.samefile(root):
+            directory /= ".."
+            yield directory
+
+    def get_cargo_lock_file(directory: Path) -> io.BufferedReader:
+        err: typing.Optional[Exception] = None
+        for directory in iterate_parents(directory):
+            try:
+                return open(directory / "Cargo.lock", "rb")
+            except FileNotFoundError as e:
+                if err is None:
+                    err = e
+        raise RuntimeError(
+            "Cargo.lock not found in any of the parent directories") from err
+
     crates: typing.Set[Crate] = set()
     pkg_metas = []
     for directory in args.directory:
         with open(directory / "Cargo.toml", "rb") as f:
             pkg_metas.append(get_package_metadata(f))
         exclude = [pkg_metas[-1].name] + pkg_metas[-1].workspace_members
-        with open(directory / "Cargo.lock", "rb") as f:
+        with get_cargo_lock_file(directory) as f:
             crates.update(get_crates(f, exclude=exclude))
     pkg_meta = pkg_metas[0]
 
