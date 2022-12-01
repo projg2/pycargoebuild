@@ -71,13 +71,24 @@ def main(prog_name: str, *argv: str) -> int:
     load_license_mapping(args.license_mapping)
     args.license_mapping.close()
 
+    def locate_workspace_root(directory: Path) -> Path:
+        for current_dir in (directory.resolve() / "Cargo.lock" ).parents:
+            try:
+                with open(current_dir / "Cargo.lock", "rb"):
+                    return current_dir
+            except FileNotFoundError as e:
+                err = e
+                continue
+        raise err
+
     crates: typing.Set[Crate] = set()
     pkg_metas = []
     for directory in args.directory:
         with open(directory / "Cargo.toml", "rb") as f:
             pkg_metas.append(get_package_metadata(f))
         exclude = [pkg_metas[-1].name] + pkg_metas[-1].workspace_members
-        with open(directory / "Cargo.lock", "rb") as f:
+        ws_root = locate_workspace_root(directory)
+        with open(ws_root / "Cargo.lock", "rb") as f:
             crates.update(get_crates(f, exclude=exclude))
     pkg_meta = pkg_metas[0]
 
