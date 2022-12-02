@@ -96,17 +96,17 @@ def test_integration(tmp_path, capfd, ebuild):
     verify_files([(dist_file, pkg_info.checksum)])
     with tarfile.open(dist_file, "r") as tarf:
         for directory in pkg_info.directories:
-            member = tarf.getmember(f"{directory}/Cargo.toml")
-            tarf.extract(member, tmp_path, set_attrs=False)
+            member_toml = tarf.getmember(f"{directory}/Cargo.toml")
+            assert member_toml is not None
+            tarf.extract(member_toml, tmp_path, set_attrs=False)
             for current in (PurePosixPath(directory) / "Cargo.lock").parents:
-                member = None
                 try:
-                    member = tarf.getmember(f"{current}/Cargo.lock")
+                    member_lock = tarf.getmember(f"{current}/Cargo.lock")
                 except KeyError:
                     continue
                 break
-            assert member is not None
-            tarf.extract(member, tmp_path, set_attrs=False)
+            assert member_lock is not None
+            tarf.extract(member_lock, tmp_path, set_attrs=False)
 
     args = ["-d", str(dist_dir),
             "-l", str(test_dir / "license-mapping.conf"),
