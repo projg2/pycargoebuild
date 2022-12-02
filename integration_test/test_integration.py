@@ -1,7 +1,7 @@
 import tarfile
 import typing
 
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath, PurePosixPath
 from urllib.parse import urlparse
 
 import pytest
@@ -98,7 +98,7 @@ def test_integration(tmp_path, capfd, ebuild):
         for directory in pkg_info.directories:
             member = tarf.getmember(f"{directory}/Cargo.toml")
             tarf.extract(member, tmp_path, set_attrs=False)
-            for current in (Path(directory) / "Cargo.lock").parents:
+            for current in (PurePath(directory) / "Cargo.lock").parents:
                 try:
                     member = tarf.getmember(f"{current}/Cargo.lock")
                 except KeyError:
