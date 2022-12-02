@@ -99,13 +99,14 @@ def test_integration(tmp_path, capfd, ebuild):
             member = tarf.getmember(f"{directory}/Cargo.toml")
             tarf.extract(member, tmp_path, set_attrs=False)
             for current in (PurePath(directory) / "Cargo.lock").parents:
+                member = None
                 try:
                     member = tarf.getmember(f"{current}/Cargo.lock")
                 except KeyError:
                     continue
-                assert member is not None
-                tarf.extract(member, tmp_path, set_attrs=False)
                 break
+            assert member is not None
+            tarf.extract(member, tmp_path, set_attrs=False)
 
     args = ["-d", str(dist_dir),
             "-l", str(test_dir / "license-mapping.conf"),
