@@ -73,7 +73,7 @@ def main(prog_name: str, *argv: str) -> int:
     args.license_mapping.close()
 
     def locate_cargo_lock_file(directory: Path) -> io.BytesIO:
-        for current_dir in (directory.resolve() / "Cargo.lock" ).parents:
+        for current_dir in (directory.resolve() / "Cargo.lock").parents:
             try:
                 return open(current_dir / "Cargo.lock", "rb")
             except FileNotFoundError as e:
