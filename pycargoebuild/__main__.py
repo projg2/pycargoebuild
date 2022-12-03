@@ -85,7 +85,7 @@ def main(prog_name: str, *argv: str) -> int:
             try:
                 return open(directory / "Cargo.lock", "rb")
             except FileNotFoundError as e:
-                if not err:
+                if err is None:
                     err = e
         raise RuntimeError(
             "Cargo.lock not found in any of the parent directories") from err
