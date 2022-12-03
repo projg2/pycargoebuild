@@ -72,17 +72,19 @@ def main(prog_name: str, *argv: str) -> int:
     load_license_mapping(args.license_mapping)
     args.license_mapping.close()
 
-    def get_cargo_lock_file(directory: Path) -> io.BufferedReader:
+    def iterate_parents(directory: Path) -> typing.Generator[Path, None, None]:
         root = directory.absolute().root
-        current_dir = directory
-        while True:
+        yield directory
+        while not directory.samefile(root):
+            directory /= ".."
+            yield directory
+
+    def get_cargo_lock_file(directory: Path) -> io.BufferedReader:
+        for directory in iterate_parents(directory):
             try:
-                return open(current_dir / "Cargo.lock", "rb")
+                return open(directory / "Cargo.lock", "rb")
             except FileNotFoundError as e:
                 err = e
-            if current_dir.samefile(root):
-                break
-            current_dir = current_dir / ".."
         raise RuntimeError(
             "Cargo.lock not found in any of the parent directories") from err
 
