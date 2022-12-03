@@ -72,13 +72,17 @@ def main(prog_name: str, *argv: str) -> int:
     load_license_mapping(args.license_mapping)
     args.license_mapping.close()
 
-    def locate_cargo_lock_file(directory: Path) -> io.BufferedReader:
-        for current_dir in (directory.resolve() / "Cargo.lock").parents:
+    def get_cargo_lock_file(directory: Path) -> io.BufferedReader:
+        root = directory.absolute().root
+        current_dir = directory
+        while True:
             try:
                 return open(current_dir / "Cargo.lock", "rb")
             except FileNotFoundError as e:
                 err = e
-                continue
+            if current_dir.samefile(root):
+                break
+            current_dir = current_dir / ".."
         raise err
 
     crates: typing.Set[Crate] = set()
@@ -87,7 +91,7 @@ def main(prog_name: str, *argv: str) -> int:
         with open(directory / "Cargo.toml", "rb") as f:
             pkg_metas.append(get_package_metadata(f))
         exclude = [pkg_metas[-1].name] + pkg_metas[-1].workspace_members
-        with locate_cargo_lock_file(directory) as f:
+        with get_cargo_lock_file(directory) as f:
             crates.update(get_crates(f, exclude=exclude))
     pkg_meta = pkg_metas[0]
 
