@@ -83,7 +83,8 @@ def main(prog_name: str, *argv: str) -> int:
             if current_dir.samefile(root):
                 break
             current_dir = current_dir / ".."
-        raise err
+        raise RuntimeError(
+            "Cargo.lock not found in any of the parent directories") from err
 
     crates: typing.Set[Crate] = set()
     pkg_metas = []
