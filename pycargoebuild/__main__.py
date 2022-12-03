@@ -80,11 +80,12 @@ def main(prog_name: str, *argv: str) -> int:
             yield directory
 
     def get_cargo_lock_file(directory: Path) -> io.BufferedReader:
+        err: typing.Optional[Exception] = None
         for directory in iterate_parents(directory):
             try:
                 return open(directory / "Cargo.lock", "rb")
             except FileNotFoundError as e:
-                if 'err' not in locals():
+                if not err:
                     err = e
         raise RuntimeError(
             "Cargo.lock not found in any of the parent directories") from err
