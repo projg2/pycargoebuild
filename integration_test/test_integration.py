@@ -1,3 +1,4 @@
+import logging
 import tarfile
 import typing
 
@@ -16,6 +17,7 @@ class Package(typing.NamedTuple):
     directories: typing.List[str]
     expected_filename: str
     crate_license: bool = True
+    uses_license_file: bool = False
 
 
 PACKAGES = {
@@ -48,7 +50,8 @@ PACKAGES = {
         checksum="539a2bfe908f471bfa933876bd1eb6a1"
                  "9cf2176d375f82ef7f99530a40e48c2c",
         directories=["rustls-0.20.7"],
-        expected_filename="rustls-0.20.7.ebuild"),
+        expected_filename="rustls-0.20.7.ebuild",
+        uses_license_file=True),
     "setuptools-rust-1.5.2.ebuild": Package(
         url="https://files.pythonhosted.org/packages/99/db/"
             "e4ecb483ffa194d632ed44bda32cb740e564789fed7e56c2be8e2a0e2aa6/"
@@ -89,7 +92,9 @@ def normalize_ebuild(path: Path) -> str:
 
 
 @pytest.mark.parametrize("ebuild", PACKAGES)
-def test_integration(tmp_path, capfd, ebuild):
+def test_integration(tmp_path, capfd, caplog, ebuild):
+    caplog.set_level(logging.WARNING)
+
     pkg_info = PACKAGES[ebuild]
 
     test_dir = Path(__file__).parent
@@ -126,3 +131,18 @@ def test_integration(tmp_path, capfd, ebuild):
     assert stdout == str(tmp_path / pkg_info.expected_filename) + "\n"
     assert (normalize_ebuild(tmp_path / pkg_info.expected_filename) ==
             normalize_ebuild(test_dir / ebuild))
+
+    records = set(caplog.records)
+    if pkg_info.uses_license_file:
+        # we should get a warning about license-file use
+        license_file_warnings = [
+            rec for rec in records if "uses license-file" in rec.message]
+        assert len(license_file_warnings) > 0
+        records.difference_update(license_file_warnings)
+    if len(pkg_info.directories) > 1:
+        # we should get a warning about multiple directories
+        multiple_dir_warnings = [
+            rec for rec in records if "Multiple directories" in rec.message]
+        assert len(multiple_dir_warnings) > 0
+        records.difference_update(multiple_dir_warnings)
+    assert len(records) == 0
