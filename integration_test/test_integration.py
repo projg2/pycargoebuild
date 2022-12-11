@@ -43,6 +43,12 @@ PACKAGES = {
                  "100ecbc13634b4995d9d36a481ae130e",
         directories=["rustworkx-0.12.1"],
         expected_filename="rustworkx-0.12.1.ebuild"),
+    "rustls-0.20.7.ebuild": Package(
+        url="https://crates.io/api/v1/crates/rustls/0.20.7/download",
+        checksum="539a2bfe908f471bfa933876bd1eb6a1"
+                 "9cf2176d375f82ef7f99530a40e48c2c",
+        directories=["rustls-0.20.7"],
+        expected_filename="rustls-0.20.7.ebuild"),
     "setuptools-rust-1.5.2.ebuild": Package(
         url="https://files.pythonhosted.org/packages/99/db/"
             "e4ecb483ffa194d632ed44bda32cb740e564789fed7e56c2be8e2a0e2aa6/"
