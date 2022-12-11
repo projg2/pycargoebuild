@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 import tarfile
 import typing
@@ -72,7 +73,7 @@ def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
     return ""
 
 
-def get_license_from_crate(path: Path) -> str:
+def get_license_from_crate(path: Path) -> typing.Optional[str]:
     """
     Read the metadata from specified crate and return its license string
     """
@@ -87,9 +88,15 @@ def get_license_from_crate(path: Path) -> str:
             # expects BinaryIO -- but it actually is compatible
             # https://github.com/hukkin/tomli/issues/214
             crate_metadata = get_package_metadata(tarf)  # type: ignore
-            if crate_metadata.license is None:
+            if crate_metadata.license_file is not None:
+                logging.warning(
+                    f"Crate {path.name} uses license-file="
+                    f"{crate_metadata.license_file!r}, please inspect "
+                    "the license manually and add it *separately* from crate "
+                    "licenses")
+            elif crate_metadata.license is None:
                 raise RuntimeError(
-                    f"Create {path.name} does not specify a license!")
+                    f"Crate {path.name} does not specify a license!")
             return crate_metadata.license
 
 
@@ -100,6 +107,7 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
 
     spdx = license_expression.get_spdx_licensing()
     crate_licenses = set(map(get_license_from_crate, crate_files))
+    crate_licenses.discard(None)
 
     # combine crate licenses and simplify the result
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)

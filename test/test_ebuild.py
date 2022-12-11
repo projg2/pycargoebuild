@@ -44,6 +44,12 @@ def crate_dir(tmp_path_factory) -> typing.Generator[Path, None, None]:
         version = "2"
         license = "CC0-1.0 OR Unlicense"
     """)
+    make_crate(tmp_path / "baz-3.crate", b"""
+        [package]
+        name = "baz"
+        version = "3"
+        license-file = "COPYING"
+    """)
     yield tmp_path
 
 
@@ -52,6 +58,7 @@ def crates(crate_dir: Path
            ) -> typing.Generator[typing.List[Path], None, None]:
     yield [crate_dir / "foo-1.crate",
            crate_dir / "bar-2.crate",
+           crate_dir / "baz-3.crate",
            ]
 
 
@@ -66,6 +73,7 @@ def test_get_ebuild(real_license_mapping, pkg_meta, crates):
 
         CRATES="
         \tbar-2
+        \tbaz-3
         \tfoo-1
         "
 
@@ -101,6 +109,7 @@ def test_get_ebuild_no_license(real_license_mapping, crates):
 
         CRATES="
         \tbar-2
+        \tbaz-3
         \tfoo-1
         "
 
@@ -163,6 +172,7 @@ def test_get_ebuild_no_crate_license(real_license_mapping, pkg_meta, crates):
 
         CRATES="
         \tbar-2
+        \tbaz-3
         \tfoo-1
         "
 
@@ -205,6 +215,7 @@ def test_update_ebuild(real_license_mapping, pkg_meta, crates):
 
         CRATES="
         \tbar-2
+        \tbaz-3
         \tfoo-1
         "
 
@@ -250,6 +261,7 @@ def test_update_ebuild_no_crate_license(real_license_mapping,
 
         CRATES="
         \tbar-2
+        \tbaz-3
         \tfoo-1
         "
 

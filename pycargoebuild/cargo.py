@@ -26,6 +26,7 @@ class PackageMetadata(typing.NamedTuple):
     name: str
     version: str
     license: typing.Optional[str] = None
+    license_file: typing.Optional[str] = None
     description: typing.Optional[str] = None
     homepage: typing.Optional[str] = None
     workspace_members: typing.List[str] = []
@@ -35,6 +36,7 @@ class PackageMetadata(typing.NamedTuple):
         return PackageMetadata(name=self.name,
                                version=self.version,
                                license=new_license,
+                               license_file=None,
                                description=self.description,
                                homepage=self.homepage,
                                workspace_members=list(self.workspace_members))
@@ -73,8 +75,6 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     """Read package from the open ``Cargo.toml`` file"""
     cargo_toml = tomllib.load(f)
     pkg_meta = cargo_toml["package"]
-    if "license_file" in pkg_meta:
-        raise NotImplementedError("license_file metadata key not supported")
     pkg_license = pkg_meta.get("license")
     if pkg_license is not None:
         pkg_license = cargo_to_spdx(pkg_license)
@@ -82,6 +82,7 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
         name=pkg_meta["name"],
         version=pkg_meta["version"],
         license=pkg_license,
+        license_file=pkg_meta.get("license-file"),
         description=pkg_meta.get("description"),
         homepage=pkg_meta.get("homepage"),
         workspace_members=cargo_toml.get("workspace", {}).get("members", []))

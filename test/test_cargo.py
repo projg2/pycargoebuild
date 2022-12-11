@@ -58,3 +58,17 @@ def test_get_package_metadata_workspace():
             PackageMetadata(name="test",
                             version="0",
                             workspace_members=["foo", "bar"]))
+
+
+def test_get_package_metadata_license_file():
+    input_toml = """
+        [package]
+        name = "test"
+        version = "0"
+        license-file = "COPYING"
+    """
+
+    assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
+            PackageMetadata(name="test",
+                            version="0",
+                            license_file="COPYING"))
