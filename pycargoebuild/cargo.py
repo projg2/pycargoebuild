@@ -66,9 +66,13 @@ def get_crates(f: typing.BinaryIO, *, exclude: typing.Container[str]
             raise RuntimeError("Incorrect/insufficient metadata for crate: "
                                f"{p!r}") from e
 
+    # Note that technically rust permits using the same name for external
+    # and local packages (sic), and e.g. blake3-py uses it.
+    # Therefore, skip packages from exclude list only if they do not
+    # have external "source" specified.
     return (crate_from_cargo_lock(p)
             for p in cargo_lock["package"]
-            if p["name"] not in exclude)
+            if "source" in p or p["name"] not in exclude)
 
 
 def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
