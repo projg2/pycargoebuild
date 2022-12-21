@@ -21,6 +21,14 @@ class Package(typing.NamedTuple):
 
 
 PACKAGES = {
+    "blake3-0.3.3.ebuild": Package(
+        url="https://files.pythonhosted.org/packages/7e/88/"
+            "271fc900d7e8f091601c01412f3eafb62c62a9ce98091a24a822b4c392c1/"
+            "blake3-0.3.3.tar.gz",
+        checksum="0a78908b6299fd21dd46eb00fa4592b2"
+                 "59ee419d586d545a3b86e1f2e4d0ee6d",
+        directories=["blake3-0.3.3"],
+        expected_filename="blake3-0.3.3.ebuild"),
     "cryptography-38.0.3.ebuild": Package(
         url="https://files.pythonhosted.org/packages/13/dd/"
             "a9608b7aebe5d2dc0c98a4b2090a6b815628efa46cc1c046b89d8cd25f4c/"
