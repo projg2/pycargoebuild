@@ -60,7 +60,7 @@ def test_cargo_to_spdx():
 def test_get_crates():
     input_toml = CARGO_LOCK_TOML
 
-    assert list(get_crates(io.BytesIO(input_toml), exclude=["test"])) == CRATES
+    assert list(get_crates(io.BytesIO(input_toml))) == CRATES
 
 
 @pytest.mark.parametrize("exclude", ["", "description", "homepage", "license"])
