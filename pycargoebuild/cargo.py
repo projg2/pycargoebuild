@@ -76,6 +76,13 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
 def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     """Read package from the open ``Cargo.toml`` file"""
     cargo_toml = tomllib.load(f)
+
+    if "package" not in cargo_toml and "workspace" in cargo_toml:
+        raise RuntimeError(
+            "Specified directory seems to be a workspace root, please run "
+            "pycargoebuild on one of its members instead: "
+            f"{' '.join(cargo_toml['workspace']['members'])}")
+
     pkg_meta = cargo_toml["package"]
     pkg_license = pkg_meta.get("license")
     if pkg_license is not None:
