@@ -61,11 +61,8 @@ def get_crates(f: typing.BinaryIO, *, exclude: typing.Container[str]
             f"Cargo.lock version '{cargo_lock['version']} unsupported")
 
     for p in cargo_lock["package"]:
-        # Note that technically rust permits using the same name for external
-        # and local packages (sic), and e.g. blake3-py uses it.
-        # Therefore, skip packages from exclude list only if they do not
-        # have external "source" specified.
-        if "source" not in p and p["name"] in exclude:
+        # Skip all crates without "source", they should be local.
+        if "source" not in p:
             continue
         if p["source"] != CRATE_REGISTRY:
             raise RuntimeError(f"Unsupported crate source: {p['source']}")
