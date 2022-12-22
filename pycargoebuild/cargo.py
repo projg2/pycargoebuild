@@ -32,7 +32,6 @@ class PackageMetadata(typing.NamedTuple):
     license_file: typing.Optional[str] = None
     description: typing.Optional[str] = None
     homepage: typing.Optional[str] = None
-    workspace_members: typing.List[str] = []
 
     def with_replaced_license(self, new_license: typing.Optional[str]
                               ) -> "PackageMetadata":
@@ -41,8 +40,7 @@ class PackageMetadata(typing.NamedTuple):
                                license=new_license,
                                license_file=None,
                                description=self.description,
-                               homepage=self.homepage,
-                               workspace_members=list(self.workspace_members))
+                               homepage=self.homepage)
 
 
 def cargo_to_spdx(license_str: str) -> str:
@@ -88,5 +86,4 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
         license=pkg_license,
         license_file=pkg_meta.get("license-file"),
         description=pkg_meta.get("description"),
-        homepage=pkg_meta.get("homepage"),
-        workspace_members=cargo_toml.get("workspace", {}).get("members", []))
+        homepage=pkg_meta.get("homepage"))
