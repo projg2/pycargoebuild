@@ -21,6 +21,14 @@ class Package(typing.NamedTuple):
 
 
 PACKAGES = {
+    "bindgen-0.63.0.ebuild": Package(
+        url="https://github.com/rust-lang/rust-bindgen/archive/"
+            "refs/tags/v0.63.0.tar.gz",
+        checksum="9fdfea04da35b9f602967426e4a5893e"
+                 "4efb453bceb0d7954efb1b3c88caaf33",
+        directories=["rust-bindgen-0.63.0/bindgen"],
+        expected_filename="bindgen-0.63.0.ebuild",
+        uses_license_file=True),
     "blake3-0.3.3.ebuild": Package(
         url="https://files.pythonhosted.org/packages/7e/88/"
             "271fc900d7e8f091601c01412f3eafb62c62a9ce98091a24a822b4c392c1/"
