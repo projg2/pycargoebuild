@@ -30,7 +30,7 @@ CARGO_LOCK_TOML = b'''
     [[package]]
     name = "test"
     version = "1.2.3"
-    source = "registry+https://example.com"
+    source = "registry+https://github.com/rust-lang/crates.io-index"
     checksum = """76ee7a02da4d231650c7cea31349b889\\
                   be2f45ddb3ef3032d2ec8185f6313fd2"""
 

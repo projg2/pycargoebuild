@@ -7,6 +7,9 @@ else:
     import tomli as tomllib
 
 
+CRATE_REGISTRY = "registry+https://github.com/rust-lang/crates.io-index"
+
+
 class Crate(typing.NamedTuple):
     name: str
     version: str
@@ -57,22 +60,23 @@ def get_crates(f: typing.BinaryIO, *, exclude: typing.Container[str]
         raise NotImplementedError(
             f"Cargo.lock version '{cargo_lock['version']} unsupported")
 
-    def crate_from_cargo_lock(p: dict) -> Crate:
+    for p in cargo_lock["package"]:
+        # Note that technically rust permits using the same name for external
+        # and local packages (sic), and e.g. blake3-py uses it.
+        # Therefore, skip packages from exclude list only if they do not
+        # have external "source" specified.
+        if "source" not in p and p["name"] in exclude:
+            continue
+        if p["source"] != CRATE_REGISTRY:
+            raise RuntimeError(f"Unsupported crate source: {p['source']}")
+
         try:
-            return Crate(name=p["name"],
-                         version=p["version"],
-                         checksum=p["checksum"])
+            yield Crate(name=p["name"],
+                        version=p["version"],
+                        checksum=p["checksum"])
         except KeyError as e:
             raise RuntimeError("Incorrect/insufficient metadata for crate: "
                                f"{p!r}") from e
-
-    # Note that technically rust permits using the same name for external
-    # and local packages (sic), and e.g. blake3-py uses it.
-    # Therefore, skip packages from exclude list only if they do not
-    # have external "source" specified.
-    return (crate_from_cargo_lock(p)
-            for p in cargo_lock["package"]
-            if "source" in p or p["name"] not in exclude)
 
 
 def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
