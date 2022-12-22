@@ -15,7 +15,7 @@ class Package(typing.NamedTuple):
     url: str
     checksum: str
     directories: typing.List[str]
-    expected_filename: str
+    expected_filename: typing.Optional[str] = None
     crate_license: bool = True
     uses_license_file: bool = False
 
@@ -27,7 +27,6 @@ PACKAGES = {
         checksum="9fdfea04da35b9f602967426e4a5893e"
                  "4efb453bceb0d7954efb1b3c88caaf33",
         directories=["rust-bindgen-0.63.0/bindgen"],
-        expected_filename="bindgen-0.63.0.ebuild",
         uses_license_file=True),
     "blake3-0.3.3.ebuild": Package(
         url="https://files.pythonhosted.org/packages/7e/88/"
@@ -35,8 +34,7 @@ PACKAGES = {
             "blake3-0.3.3.tar.gz",
         checksum="0a78908b6299fd21dd46eb00fa4592b2"
                  "59ee419d586d545a3b86e1f2e4d0ee6d",
-        directories=["blake3-0.3.3"],
-        expected_filename="blake3-0.3.3.ebuild"),
+        directories=["blake3-0.3.3"]),
     "cryptography-38.0.3.ebuild": Package(
         url="https://files.pythonhosted.org/packages/13/dd/"
             "a9608b7aebe5d2dc0c98a4b2090a6b815628efa46cc1c046b89d8cd25f4c/"
@@ -51,22 +49,19 @@ PACKAGES = {
             "qiskit-terra-0.22.3.tar.gz",
         checksum="4dfd246177883c6d1908ff532e384e9a"
                  "e063ceb61236833ad656e2da9953a387",
-        directories=["qiskit-terra-0.22.3"],
-        expected_filename="qiskit-terra-0.22.3.ebuild"),
+        directories=["qiskit-terra-0.22.3"]),
     "rustworkx-0.12.1.ebuild": Package(
         url="https://files.pythonhosted.org/packages/17/e6/"
             "924967efd523c0bfed2868b62c334a3339f21fba0ac4b447089731312159/"
             "rustworkx-0.12.1.tar.gz",
         checksum="13a19a2f64dff086b3bffffb294c4630"
                  "100ecbc13634b4995d9d36a481ae130e",
-        directories=["rustworkx-0.12.1"],
-        expected_filename="rustworkx-0.12.1.ebuild"),
+        directories=["rustworkx-0.12.1"]),
     "rustls-0.20.7.ebuild": Package(
         url="https://crates.io/api/v1/crates/rustls/0.20.7/download",
         checksum="539a2bfe908f471bfa933876bd1eb6a1"
                  "9cf2176d375f82ef7f99530a40e48c2c",
         directories=["rustls-0.20.7"],
-        expected_filename="rustls-0.20.7.ebuild",
         uses_license_file=True),
     "setuptools-rust-1.5.2.ebuild": Package(
         url="https://files.pythonhosted.org/packages/99/db/"
@@ -97,8 +92,7 @@ PACKAGES = {
             "matrix_synapse-1.72.0.tar.gz",
         checksum="52fd58ffd0865793eb96f4c959c971eb"
                  "e724881863ab0dafca445baf89d21714",
-        directories=["matrix_synapse-1.72.0/rust"],
-        expected_filename="synapse-0.1.0.ebuild"),
+        directories=["matrix_synapse-1.72.0/rust"]),
 }
 
 
@@ -144,9 +138,9 @@ def test_integration(tmp_path, capfd, caplog, ebuild):
 
     assert main("test", *args) == 0
     stdout, _ = capfd.readouterr()
-    assert stdout == str(tmp_path / pkg_info.expected_filename) + "\n"
-    assert (normalize_ebuild(tmp_path / pkg_info.expected_filename) ==
-            normalize_ebuild(test_dir / ebuild))
+    expected = tmp_path / (pkg_info.expected_filename or ebuild)
+    assert stdout == str(expected) + "\n"
+    assert normalize_ebuild(expected) == normalize_ebuild(test_dir / ebuild)
 
     records = set(caplog.records)
     if pkg_info.uses_license_file:
