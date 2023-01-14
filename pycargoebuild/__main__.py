@@ -173,6 +173,10 @@ def main(prog_name: str, *argv: str) -> int:
                 shutil.copymode(args.input.fileno(),
                                 outf.fileno())  # type: ignore
                 args.input.close()
+            else:
+                umask = os.umask(0)
+                os.umask(umask)
+                os.fchmod(outf.fileno(), 0o666 & ~umask)
             outf.write(ebuild)
     except Exception:
         Path(outf.name).unlink()
