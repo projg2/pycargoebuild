@@ -3,6 +3,7 @@ import logging
 import re
 import tarfile
 import typing
+import urllib.parse
 
 from functools import partial
 from pathlib import Path
@@ -124,6 +125,7 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
 
 
 DQUOTE_SPECIAL_RE = re.compile(r'([$`"\\])')
+DQUOTE_SPECIAL_PLUS_WS_RE = re.compile(r'[$`"\\\s]')
 
 
 def collapse_whitespace(value: str) -> str:
@@ -134,6 +136,12 @@ def collapse_whitespace(value: str) -> str:
 def bash_dquote_escape(value: str) -> str:
     """Escape all characters with special meaning in bash double-quotes"""
     return DQUOTE_SPECIAL_RE.sub(r"\\\1", value)
+
+
+def url_dquote_escape(value: str) -> str:
+    """URL-encode whitespace and special chars to use in bash double-quotes"""
+    return DQUOTE_SPECIAL_PLUS_WS_RE.sub(
+        lambda x: urllib.parse.quote_plus(x.group(0)), value)
 
 
 def get_ebuild(pkg_meta: PackageMetadata,
@@ -155,7 +163,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
         crate_licenses=get_crate_LICENSE(crate_files),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
-        homepage=pkg_meta.homepage or "",
+        homepage=url_dquote_escape(pkg_meta.homepage or ""),
         pkg_license=get_package_LICENSE(pkg_meta),
         prog_version=__version__,
         year=datetime.date.today().year)
