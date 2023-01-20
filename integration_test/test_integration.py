@@ -43,6 +43,12 @@ PACKAGES = {
                  "f734735b49ee45b11324d85efc4d5cbd",
         directories=["cryptography-38.0.3/src/rust"],
         expected_filename="cryptography-rust-0.1.0.ebuild"),
+    "mdbook-linkcheck-0.7.7.ebuild": Package(
+        url="https://github.com/Michael-F-Bryan/mdbook-linkcheck/archive/"
+            "v0.7.7.tar.gz",
+        checksum="3194243acf12383bd328a9440ab1ae30"
+                 "4e9ba244d3bd7f85f1c23b0745c4847a",
+        directories=["mdbook-linkcheck-0.7.7"]),
     "qiskit-terra-0.22.3.ebuild": Package(
         url="https://files.pythonhosted.org/packages/98/11/"
             "afb20dd5af0fcf9d5ca57e4cfb2b0b3b1e73fa9dcd39ece82389b77f428a/"
