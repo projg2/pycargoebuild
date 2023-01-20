@@ -123,6 +123,19 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
     return crate_licenses_str
 
 
+DQUOTE_SPECIAL_RE = re.compile(r'([$`"\\])')
+
+
+def collapse_whitespace(value: str) -> str:
+    """Collapse sequences of whitespace into a single space"""
+    return " ".join(value.split())
+
+
+def bash_dquote_escape(value: str) -> str:
+    """Escape all characters with special meaning in bash double-quotes"""
+    return DQUOTE_SPECIAL_RE.sub(r"\\\1", value)
+
+
 def get_ebuild(pkg_meta: PackageMetadata,
                crate_files: typing.Iterable[Path],
                *,
@@ -140,7 +153,8 @@ def get_ebuild(pkg_meta: PackageMetadata,
     return template.format(
         crates=get_CRATES(crate_files),
         crate_licenses=get_crate_LICENSE(crate_files),
-        description=pkg_meta.description or "",
+        description=bash_dquote_escape(collapse_whitespace(
+            pkg_meta.description or "")),
         homepage=pkg_meta.homepage or "",
         pkg_license=get_package_LICENSE(pkg_meta),
         prog_version=__version__,

@@ -10,7 +10,9 @@ import pytest
 
 from pycargoebuild import __version__
 from pycargoebuild.cargo import PackageMetadata
-from pycargoebuild.ebuild import get_ebuild, update_ebuild
+from pycargoebuild.ebuild import (get_ebuild, update_ebuild,
+                                  collapse_whitespace, bash_dquote_escape,
+                                  )
 
 
 @pytest.fixture(scope="session")
@@ -319,3 +321,12 @@ def test_update_ebuild_fail_with_crate_license(real_license_mapping,
                 # Dependent crate licenses
                 LICENSE+=""
             """), pkg_meta, crates, crate_license=False)
+
+
+def test_collapse_whitespace():
+    assert collapse_whitespace("\tfoo  bar \n baz \u00A0") == "foo bar baz"
+
+
+def test_bash_dquote_escape():
+    assert (bash_dquote_escape('my `very` "special" $(package)\\') ==
+            r'my \`very\` \"special\" \$(package)\\')
