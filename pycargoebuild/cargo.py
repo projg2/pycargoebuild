@@ -13,7 +13,7 @@ CRATE_REGISTRY = "registry+https://github.com/rust-lang/crates.io-index"
 class Crate(typing.NamedTuple):
     name: str
     version: str
-    checksum: str
+    checksum: typing.Optional[str] = None
 
     @property
     def filename(self) -> str:

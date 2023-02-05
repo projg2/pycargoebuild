@@ -74,5 +74,9 @@ def verify_crates(crates: typing.Iterable[Crate], *, distdir: Path) -> None:
     Verify checksums of crates fetched into distdir
     """
 
-    verify_files(
-        (distdir / crate.filename, crate.checksum) for crate in crates)
+    def get_paths() -> typing.Generator[typing.Tuple[Path, str], None, None]:
+        for crate in crates:
+            assert crate.checksum is not None
+            yield (distdir / crate.filename, crate.checksum)
+
+    verify_files(get_paths())
