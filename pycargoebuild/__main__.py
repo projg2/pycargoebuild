@@ -52,8 +52,7 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Ebuild file to write (default: INPUT if --input "
                            "is specified, {name}-{version}.ebuild otherwise)")
     argp.add_argument("directory",
-                      type=Path,
-                      default=[Path(".")],
+                      default=["."],
                       nargs="*",
                       help="Directory containing Cargo.* files (default: .)")
     args = argp.parse_args(argv)
@@ -92,7 +91,8 @@ def main(prog_name: str, *argv: str) -> int:
 
     crates: typing.Set[Crate] = set()
     pkg_metas = []
-    for directory in args.directory:
+    for directory_arg in args.directory:
+        directory = Path(directory_arg)
         with open(directory / "Cargo.toml", "rb") as f:
             pkg_metas.append(get_package_metadata(f))
         with get_cargo_lock_file(directory) as f:
