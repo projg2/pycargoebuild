@@ -89,6 +89,27 @@ def main(prog_name: str, *argv: str) -> int:
         raise RuntimeError(
             "Cargo.lock not found in any of the parent directories") from err
 
+    def try_fetcher(name: str, func: typing.Callable[..., None]) -> bool:
+        if args.fetcher == "auto":
+            try:
+                func(crates, distdir=args.distdir)
+            except FileNotFoundError:
+                return False
+        elif args.fetcher == name:
+            func(crates, distdir=args.distdir)
+        else:
+            return False
+        return True
+
+    def fetch_crates(crates: typing.Iterable[Crate]) -> None:
+        if (not try_fetcher("aria2", fetch_crates_using_aria2) and
+                not try_fetcher("wget", fetch_crates_using_wget)):
+            if args.fetcher == "auto":
+                raise RuntimeError(
+                    "No supported fetcher found (out of "
+                    f"{', '.join(FETCHERS)})")
+            assert False, f"Unexpected args.fetcher={args.fetcher}"
+
     crates: typing.Set[Crate] = set()
     pkg_metas = []
     for directory_arg in args.directory:
@@ -127,27 +148,6 @@ def main(prog_name: str, *argv: str) -> int:
             print(f"{outfile} exists already, pass -f to overwrite it",
                   file=sys.stderr)
             return 1
-
-    def try_fetcher(name: str, func: typing.Callable[..., None]) -> bool:
-        if args.fetcher == "auto":
-            try:
-                func(crates, distdir=args.distdir)
-            except FileNotFoundError:
-                return False
-        elif args.fetcher == name:
-            func(crates, distdir=args.distdir)
-        else:
-            return False
-        return True
-
-    def fetch_crates(crates: typing.Iterable[Crate]) -> None:
-        if (not try_fetcher("aria2", fetch_crates_using_aria2) and
-                not try_fetcher("wget", fetch_crates_using_wget)):
-            if args.fetcher == "auto":
-                raise RuntimeError(
-                    "No supported fetcher found (out of "
-                    f"{', '.join(FETCHERS)})")
-            assert False, f"Unexpected args.fetcher={args.fetcher}"
 
     fetch_crates(crates)
     verify_crates(crates, distdir=args.distdir)
