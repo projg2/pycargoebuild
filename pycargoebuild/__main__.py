@@ -140,12 +140,16 @@ def main(prog_name: str, *argv: str) -> int:
             return False
         return True
 
-    if (not try_fetcher("aria2", fetch_crates_using_aria2) and
-            not try_fetcher("wget", fetch_crates_using_wget)):
-        if args.fetcher == "auto":
-            raise RuntimeError(
-                f"No supported fetcher found (out of {', '.join(FETCHERS)})")
-        assert False, f"Unexpected args.fetcher={args.fetcher}"
+    def fetch_crates(crates: typing.Iterable[Crate]) -> None:
+        if (not try_fetcher("aria2", fetch_crates_using_aria2) and
+                not try_fetcher("wget", fetch_crates_using_wget)):
+            if args.fetcher == "auto":
+                raise RuntimeError(
+                    "No supported fetcher found (out of "
+                    f"{', '.join(FETCHERS)})")
+            assert False, f"Unexpected args.fetcher={args.fetcher}"
+
+    fetch_crates(crates)
     verify_crates(crates, distdir=args.distdir)
     crate_files = [args.distdir / crate.filename for crate in crates]
 
