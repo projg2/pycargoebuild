@@ -89,7 +89,10 @@ def main(prog_name: str, *argv: str) -> int:
         raise RuntimeError(
             "Cargo.lock not found in any of the parent directories") from err
 
-    def try_fetcher(name: str, func: typing.Callable[..., None]) -> bool:
+    def try_fetcher(name: str,
+                    func: typing.Callable[..., None],
+                    crates: typing.Iterable[Crate],
+                    ) -> bool:
         if args.fetcher == "auto":
             try:
                 func(crates, distdir=args.distdir)
@@ -102,8 +105,8 @@ def main(prog_name: str, *argv: str) -> int:
         return True
 
     def fetch_crates(crates: typing.Iterable[Crate]) -> None:
-        if (not try_fetcher("aria2", fetch_crates_using_aria2) and
-                not try_fetcher("wget", fetch_crates_using_wget)):
+        if (not try_fetcher("aria2", fetch_crates_using_aria2, crates) and
+                not try_fetcher("wget", fetch_crates_using_wget, crates)):
             if args.fetcher == "auto":
                 raise RuntimeError(
                     "No supported fetcher found (out of "
