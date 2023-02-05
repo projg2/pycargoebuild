@@ -1,7 +1,10 @@
 import abc
+import tarfile
 import typing
 
 from pathlib import Path
+
+from pycargoebuild.cargo import Crate
 
 
 class PathWrapperBase(abc.ABC):
@@ -43,3 +46,20 @@ class PathWrapper(PathWrapperBase):
                     err = e
         assert err is not None
         raise err
+
+
+class CrateWrapper(PathWrapperBase):
+    """PathWrapperBase implementation for Crate"""
+
+    def __init__(self, crate: Crate, distdir: Path) -> None:
+        assert crate.filename.endswith(".crate")
+        self.crate_name = crate.filename[:-6]
+        self.crate_file = tarfile.open(distdir / crate.filename)
+
+    def open(self, subpath: str) -> typing.BinaryIO:
+        ret = self.crate_file.extractfile(f"{self.crate_name}/{subpath}")
+        assert ret is not None
+        return ret  # type: ignore
+
+    def find_in_parents_and_open(self, filename: str) -> typing.BinaryIO:
+        return self.open(filename)

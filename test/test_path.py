@@ -1,8 +1,11 @@
+import io
 import itertools
+import tarfile
 
 import pytest
 
-from pycargoebuild.path import PathWrapper
+from pycargoebuild.cargo import Crate
+from pycargoebuild.path import PathWrapper, CrateWrapper
 
 
 @pytest.fixture
@@ -14,6 +17,16 @@ def test_tree(tmp_path):
     with open(tmp_path / "Cargo.lock", "wb"):
         pass
     yield PathWrapper(start_dir)
+
+
+@pytest.fixture
+def test_crate(tmp_path):
+    with tarfile.open(tmp_path / "test-1.crate", "w:gz") as tarf:
+        with io.BytesIO(b"test data\n") as f:
+            tar_info = tarfile.TarInfo("test-1/Cargo.toml")
+            tar_info.size = len(f.getbuffer())
+            tarf.addfile(tar_info, f)
+    yield CrateWrapper(Crate("test", "1"), tmp_path)
 
 
 @pytest.mark.parametrize("func", ["open", "find_in_parents_and_open"])
@@ -32,3 +45,9 @@ def test_pathwrapper_iterate_parents(test_tree):
     # NB: we arbitrarily assume we shouldn't be 1024 directories deep
     parents = itertools.islice(test_tree.iterate_parents(), 1024)
     assert len(list(parents)) < 1024
+
+
+@pytest.mark.parametrize("func", ["open", "find_in_parents_and_open"])
+def test_cratewrapper_open(test_crate, func):
+    with getattr(test_crate, func)("Cargo.toml") as f:
+        assert f.read() == b"test data\n"
