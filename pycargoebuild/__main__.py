@@ -3,6 +3,7 @@ import logging
 import os.path
 import shutil
 import sys
+import tarfile
 import tempfile
 import typing
 
@@ -14,7 +15,7 @@ from pycargoebuild.fetch import (fetch_crates_using_wget,
                                  fetch_crates_using_aria2,
                                  verify_crates)
 from pycargoebuild.license import load_license_mapping
-from pycargoebuild.path import PathWrapper
+from pycargoebuild.path import CrateWrapper, PathWrapper, PathWrapperBase
 
 
 FETCHERS = ("aria2", "wget")
@@ -51,10 +52,12 @@ def main(prog_name: str, *argv: str) -> int:
     argp.add_argument("-o", "--output",
                       help="Ebuild file to write (default: INPUT if --input "
                            "is specified, {name}-{version}.ebuild otherwise)")
-    argp.add_argument("directory",
+    argp.add_argument("target",
                       default=["."],
                       nargs="*",
-                      help="Directory containing Cargo.* files (default: .)")
+                      metavar="directory|package==version",
+                      help="Directory containing Cargo.* files or a crate "
+                           "name + version to fetch (default: .)")
     args = argp.parse_args(argv)
 
     if args.distdir is None or args.license_mapping is None:
@@ -103,10 +106,20 @@ def main(prog_name: str, *argv: str) -> int:
                     f"{', '.join(FETCHERS)})")
             assert False, f"Unexpected args.fetcher={args.fetcher}"
 
+    def targets_to_wrappers(targets: list[str]
+                            ) -> typing.Generator[PathWrapperBase, None, None]:
+        for target in targets:
+            if "==" in target:
+                name, version = target.split("==", 1)
+                crate = Crate(name, version)
+                fetch_crates([crate])
+                yield CrateWrapper(crate, args.distdir)
+            else:
+                yield PathWrapper(Path(target))
+
     crates: typing.Set[Crate] = set()
     pkg_metas = []
-    for directory_arg in args.directory:
-        directory = PathWrapper(Path(directory_arg))
+    for directory in targets_to_wrappers(args.target):
         with directory.open("Cargo.toml") as f:
             pkg_metas.append(get_package_metadata(f))
         with get_cargo_lock_file(directory) as f:
@@ -115,7 +128,7 @@ def main(prog_name: str, *argv: str) -> int:
 
     if args.no_license:
         pkg_meta = pkg_meta.with_replaced_license(None)
-    elif len(args.directory) > 1:
+    elif len(args.target) > 1:
         # Combine licenses of multiple packages
         combined_license = " AND ".join(f"( {pkg.license} )"
                                         for pkg in pkg_metas
@@ -129,9 +142,9 @@ def main(prog_name: str, *argv: str) -> int:
     else:
         # This warning is only relevant when constructing a new ebuild,
         # as otherwise we do not update other metadata.
-        if len(args.directory) > 1:
+        if len(args.target) > 1:
             logging.warning(
-                "Multiple directories passed, all metadata except for LICENSE "
+                "Multiple targets passed, all metadata except for LICENSE "
                 f"will be taken from the first package, {pkg_meta.name}")
         if args.output is None:
             args.output = "{name}-{version}.ebuild"
