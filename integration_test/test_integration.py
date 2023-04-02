@@ -18,6 +18,7 @@ class Package(typing.NamedTuple):
     expected_filename: typing.Optional[str] = None
     crate_license: bool = True
     uses_license_file: bool = False
+    uses_plus_fallback: bool = False
 
 
 PACKAGES = {
@@ -63,6 +64,13 @@ PACKAGES = {
         checksum="13a19a2f64dff086b3bffffb294c4630"
                  "100ecbc13634b4995d9d36a481ae130e",
         directories=["rustworkx-0.12.1"]),
+    "rustic-rs-0.5.0.ebuild": Package(
+        url="https://github.com/rustic-rs/rustic/archive/v0.5.0.tar.gz",
+        checksum="cd3cdc17c3165b1533498f713e1c834d"
+                 "0d65a80670f65597cc19c508ce15e957",
+        directories=["rustic-0.5.0"],
+        uses_license_file=True,
+        uses_plus_fallback=True),
     "rustls-0.20.7.ebuild": Package(
         url="https://crates.io/api/v1/crates/rustls/0.20.7/download",
         checksum="539a2bfe908f471bfa933876bd1eb6a1"
@@ -153,6 +161,13 @@ def test_integration(tmp_path, capfd, caplog, ebuild):
         # we should get a warning about license-file use
         license_file_warnings = [
             rec for rec in records if "uses license-file" in rec.message]
+        assert len(license_file_warnings) > 0
+        records.difference_update(license_file_warnings)
+    if pkg_info.uses_plus_fallback:
+        # we should get a warning about foo+ fallback to foo
+        license_file_warnings = [
+            rec for rec in records if "No explicit entry for license"
+            in rec.message]
         assert len(license_file_warnings) > 0
         records.difference_update(license_file_warnings)
     if len(pkg_info.directories) > 1:
