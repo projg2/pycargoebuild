@@ -67,7 +67,6 @@ def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
     spdx = license_expression.get_spdx_licensing()
     if pkg_meta.license is not None:
         parsed_pkg_license = spdx.parse(pkg_meta.license,
-                                        validate=True,
                                         strict=True)
         return format_license_var(spdx_to_ebuild(parsed_pkg_license),
                                   prefix='LICENSE="')
@@ -112,7 +111,7 @@ def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
 
     # combine crate licenses and simplify the result
     combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
-    parsed_license = spdx.parse(combined_license, validate=True, strict=True)
+    parsed_license = spdx.parse(combined_license, strict=True)
     if parsed_license is None:
         return ""
     final_license = parsed_license.simplify()
