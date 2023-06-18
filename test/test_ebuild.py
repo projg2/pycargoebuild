@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from pycargoebuild import __version__
-from pycargoebuild.cargo import PackageMetadata
+from pycargoebuild.cargo import Crate, PackageMetadata
 from pycargoebuild.ebuild import (get_ebuild, update_ebuild,
                                   collapse_whitespace, bash_dquote_escape,
                                   url_dquote_escape,
@@ -58,15 +58,15 @@ def crate_dir(tmp_path_factory) -> typing.Generator[Path, None, None]:
 
 @pytest.fixture(scope="session")
 def crates(crate_dir: Path
-           ) -> typing.Generator[typing.List[Path], None, None]:
-    yield [crate_dir / "foo-1.crate",
-           crate_dir / "bar-2.crate",
-           crate_dir / "baz-3.crate",
+           ) -> typing.Generator[typing.List[Crate], None, None]:
+    yield [Crate("foo", "1", ""),
+           Crate("bar", "2", ""),
+           Crate("baz", "3", ""),
            ]
 
 
-def test_get_ebuild(real_license_mapping, pkg_meta, crates):
-    assert get_ebuild(pkg_meta, crates) == textwrap.dedent(f"""\
+def test_get_ebuild(real_license_mapping, pkg_meta, crate_dir, crates):
+    assert get_ebuild(pkg_meta, crates, crate_dir) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
         # Distributed under the terms of the GNU General Public License v2
 
@@ -100,9 +100,9 @@ def test_get_ebuild(real_license_mapping, pkg_meta, crates):
     """)
 
 
-def test_get_ebuild_no_license(real_license_mapping, crates):
+def test_get_ebuild_no_license(real_license_mapping, crate_dir, crates):
     pkg_meta = PackageMetadata(name="foo", version="1.2.3")
-    assert get_ebuild(pkg_meta, crates) == textwrap.dedent(f"""\
+    assert get_ebuild(pkg_meta, crates, crate_dir) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
         # Distributed under the terms of the GNU General Public License v2
 
@@ -137,7 +137,7 @@ def test_get_ebuild_no_license(real_license_mapping, crates):
 
 
 def test_get_ebuild_no_crates(real_license_mapping, pkg_meta):
-    assert get_ebuild(pkg_meta, []) == textwrap.dedent(f"""\
+    assert get_ebuild(pkg_meta, [], Path(".")) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
         # Distributed under the terms of the GNU General Public License v2
 
@@ -163,8 +163,9 @@ def test_get_ebuild_no_crates(real_license_mapping, pkg_meta):
     """)
 
 
-def test_get_ebuild_no_crate_license(real_license_mapping, pkg_meta, crates):
-    assert get_ebuild(pkg_meta, crates,
+def test_get_ebuild_no_crate_license(real_license_mapping, pkg_meta, crate_dir,
+                                     crates):
+    assert get_ebuild(pkg_meta, crates, crate_dir,
                       crate_license=False) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
         # Distributed under the terms of the GNU General Public License v2
@@ -193,7 +194,7 @@ def test_get_ebuild_no_crate_license(real_license_mapping, pkg_meta, crates):
     """)
 
 
-def test_update_ebuild(real_license_mapping, pkg_meta, crates):
+def test_update_ebuild(real_license_mapping, pkg_meta, crate_dir, crates):
     old_ebuild = textwrap.dedent("""\
         EAPI=8
 
@@ -213,7 +214,8 @@ def test_update_ebuild(real_license_mapping, pkg_meta, crates):
         KEYWORDS="~amd64 ~x86"
     """)
 
-    assert update_ebuild(old_ebuild, pkg_meta, crates) == textwrap.dedent("""\
+    assert update_ebuild(old_ebuild, pkg_meta, crates, crate_dir
+                         ) == textwrap.dedent("""\
         EAPI=8
 
         CRATES="
@@ -239,7 +241,7 @@ def test_update_ebuild(real_license_mapping, pkg_meta, crates):
 
 
 def test_update_ebuild_no_crate_license(real_license_mapping,
-                                        pkg_meta,
+                                        pkg_meta, crate_dir,
                                         crates):
     old_ebuild = textwrap.dedent("""\
         EAPI=8
@@ -258,7 +260,7 @@ def test_update_ebuild_no_crate_license(real_license_mapping,
         KEYWORDS="~amd64 ~x86"
     """)
 
-    assert update_ebuild(old_ebuild, pkg_meta, crates,
+    assert update_ebuild(old_ebuild, pkg_meta, crates, crate_dir,
                          crate_license=False) == textwrap.dedent("""\
         EAPI=8
 
@@ -308,20 +310,20 @@ BAD_UPDATE_TEST_CASES = {
 
 
 @pytest.mark.parametrize("case", BAD_UPDATE_TEST_CASES)
-def test_update_ebuild_fail(real_license_mapping, pkg_meta, crates, case):
+def test_update_ebuild_fail(real_license_mapping, pkg_meta, crate_dir, crates,
+                            case):
     with pytest.raises(RuntimeError):
-        update_ebuild(BAD_UPDATE_TEST_CASES[case], pkg_meta, crates)
+        update_ebuild(BAD_UPDATE_TEST_CASES[case], pkg_meta, crates, crate_dir)
 
 
 def test_update_ebuild_fail_with_crate_license(real_license_mapping,
-                                               pkg_meta,
-                                               crates):
+                                               pkg_meta, crate_dir, crates):
     with pytest.raises(RuntimeError):
         update_ebuild(textwrap.dedent("""\
                 CRATES=""
                 # Dependent crate licenses
                 LICENSE+=""
-            """), pkg_meta, crates, crate_license=False)
+            """), pkg_meta, crates, crate_dir, crate_license=False)
 
 
 def test_collapse_whitespace():

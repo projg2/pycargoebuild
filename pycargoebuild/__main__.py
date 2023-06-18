@@ -154,19 +154,20 @@ def main(prog_name: str, *argv: str) -> int:
 
     fetch_crates(crates)
     verify_crates(crates, distdir=args.distdir)
-    crate_files = [args.distdir / crate.filename for crate in crates]
 
     if args.input is not None:
         ebuild = update_ebuild(args.input.read(),
                                pkg_meta,
-                               crate_files,
+                               crates,
+                               distdir=args.distdir,
                                crate_license=not args.no_license)
         logging.warning(
             "The in-place mode updates CRATES and crate LICENSE+= variables "
             "only, other metadata is left unchanged")
     else:
         ebuild = get_ebuild(pkg_meta,
-                            crate_files,
+                            crates,
+                            distdir=args.distdir,
                             crate_license=not args.no_license)
 
     try:

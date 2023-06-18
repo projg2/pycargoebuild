@@ -11,7 +11,7 @@ from pathlib import Path
 import license_expression
 
 from pycargoebuild import __version__
-from pycargoebuild.cargo import PackageMetadata, get_package_metadata
+from pycargoebuild.cargo import Crate, PackageMetadata, get_package_metadata
 from pycargoebuild.format import format_license_var
 from pycargoebuild.license import spdx_to_ebuild
 
@@ -144,7 +144,8 @@ def url_dquote_escape(value: str) -> str:
 
 
 def get_ebuild(pkg_meta: PackageMetadata,
-               crate_files: typing.Iterable[Path],
+               crates: typing.Iterable[Crate],
+               distdir: Path,
                *,
                crate_license: bool = True,
                ) -> str:
@@ -157,6 +158,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
         template += EBUILD_TEMPLATE_CRATE_LICENSE
     template += EBUILD_TEMPLATE_END
 
+    crate_files = [distdir / crate.filename for crate in crates]
     return template.format(
         crates=get_CRATES(crate_files),
         crate_licenses=get_crate_LICENSE(crate_files),
@@ -196,7 +198,8 @@ class CountingSubst:
 
 def update_ebuild(ebuild: str,
                   pkg_meta: PackageMetadata,
-                  crate_files: typing.Iterable[Path],
+                  crates: typing.Iterable[Crate],
+                  distdir: Path,
                   *,
                   crate_license: bool = True,
                   ) -> str:
@@ -204,6 +207,7 @@ def update_ebuild(ebuild: str,
     Update the CRATES and LICENSE in an existing ebuild
     """
 
+    crate_files = [distdir / crate.filename for crate in crates]
     crates_repl = CountingSubst(partial(get_CRATES, crate_files))
     crate_license_repl = CountingSubst(partial(get_crate_LICENSE, crate_files))
 
