@@ -24,6 +24,10 @@ class Crate(typing.NamedTuple):
         return (f"https://crates.io/api/v1/crates/{self.name}/{self.version}/"
                 "download")
 
+    @property
+    def crate_entry(self) -> str:
+        return f"{self.name}-{self.version}"
+
 
 class PackageMetadata(typing.NamedTuple):
     name: str

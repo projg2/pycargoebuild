@@ -48,14 +48,14 @@ KEYWORDS="~amd64"
 """
 
 
-def get_CRATES(crate_files: typing.Iterable[Path]) -> str:
+def get_CRATES(crates: typing.Iterable[Crate]) -> str:
     """
     Return the value of CRATES for the given crate list
     """
-    if not crate_files:
+    if not crates:
         return ""
     return ("\n" +
-            "\n".join(f"\t{p.name[:-6]}" for p in sorted(crate_files)) +
+            "\n".join(sorted(f"\t{c.crate_entry}" for c in crates)) +
             "\n")
 
 
@@ -160,7 +160,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
 
     crate_files = [distdir / crate.filename for crate in crates]
     return template.format(
-        crates=get_CRATES(crate_files),
+        crates=get_CRATES(crates),
         crate_licenses=get_crate_LICENSE(crate_files),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
@@ -208,7 +208,7 @@ def update_ebuild(ebuild: str,
     """
 
     crate_files = [distdir / crate.filename for crate in crates]
-    crates_repl = CountingSubst(partial(get_CRATES, crate_files))
+    crates_repl = CountingSubst(partial(get_CRATES, crates))
     crate_license_repl = CountingSubst(partial(get_crate_LICENSE, crate_files))
 
     ebuild = CRATE_LICENSE_RE.sub(crate_license_repl,
