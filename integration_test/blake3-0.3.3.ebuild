@@ -68,7 +68,7 @@ inherit cargo
 DESCRIPTION="Python bindings for the Rust blake3 crate"
 HOMEPAGE="https://github.com/oconnor663/blake3-py"
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE="|| ( CC0-1.0 Apache-2.0 )"

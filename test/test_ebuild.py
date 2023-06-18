@@ -85,7 +85,7 @@ def test_get_ebuild(real_license_mapping, pkg_meta, crate_dir, crates):
         DESCRIPTION="Test package"
         HOMEPAGE="https://example.com"
         SRC_URI="
-        \t$(cargo_crate_uris)
+        \t${{CARGO_CRATE_URIS}}
         "
 
         LICENSE="|| ( Apache-2.0 MIT )"
@@ -121,7 +121,7 @@ def test_get_ebuild_no_license(real_license_mapping, crate_dir, crates):
         DESCRIPTION=""
         HOMEPAGE=""
         SRC_URI="
-        \t$(cargo_crate_uris)
+        \t${{CARGO_CRATE_URIS}}
         "
 
         LICENSE=""
@@ -152,7 +152,7 @@ def test_get_ebuild_no_crates(real_license_mapping, pkg_meta):
         DESCRIPTION="Test package"
         HOMEPAGE="https://example.com"
         SRC_URI="
-        \t$(cargo_crate_uris)
+        \t${{CARGO_CRATE_URIS}}
         "
 
         LICENSE="|| ( Apache-2.0 MIT )"
@@ -185,7 +185,7 @@ def test_get_ebuild_no_crate_license(real_license_mapping, pkg_meta, crate_dir,
         DESCRIPTION="Test package"
         HOMEPAGE="https://example.com"
         SRC_URI="
-        \t$(cargo_crate_uris)
+        \t${{CARGO_CRATE_URIS}}
         "
 
         LICENSE="|| ( Apache-2.0 MIT )"
@@ -205,7 +205,7 @@ def test_update_ebuild(real_license_mapping, pkg_meta, crate_dir, crates):
 
         inherit cargo
 
-        SRC_URI="$(cargo_crate_uris)"
+        SRC_URI="${{CARGO_CRATE_URIS}}"
 
         LICENSE="MIT"
         # Dependent crate licenses
@@ -226,7 +226,7 @@ def test_update_ebuild(real_license_mapping, pkg_meta, crate_dir, crates):
 
         inherit cargo
 
-        SRC_URI="$(cargo_crate_uris)"
+        SRC_URI="${{CARGO_CRATE_URIS}}"
 
         LICENSE="MIT"
         # Dependent crate licenses
@@ -253,7 +253,7 @@ def test_update_ebuild_no_crate_license(real_license_mapping,
 
         inherit cargo
 
-        SRC_URI="$(cargo_crate_uris)"
+        SRC_URI="${{CARGO_CRATE_URIS}}"
 
         LICENSE="MIT"
         SLOT="0"
@@ -272,7 +272,7 @@ def test_update_ebuild_no_crate_license(real_license_mapping,
 
         inherit cargo
 
-        SRC_URI="$(cargo_crate_uris)"
+        SRC_URI="${{CARGO_CRATE_URIS}}"
 
         LICENSE="MIT"
         SLOT="0"

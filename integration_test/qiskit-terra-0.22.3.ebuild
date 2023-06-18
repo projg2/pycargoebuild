@@ -81,7 +81,7 @@ inherit cargo
 DESCRIPTION=""
 HOMEPAGE=""
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE=""

@@ -64,7 +64,7 @@ inherit cargo
 DESCRIPTION=""
 HOMEPAGE="https://github.com/samuelcolvin/watchfiles/watchfiles"
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE="MIT"

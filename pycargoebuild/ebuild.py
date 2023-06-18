@@ -31,7 +31,7 @@ inherit cargo
 DESCRIPTION="{description}"
 HOMEPAGE="{homepage}"
 SRC_URI="
-\t$(cargo_crate_uris)
+\t${{CARGO_CRATE_URIS}}
 "
 
 LICENSE="{pkg_license}"

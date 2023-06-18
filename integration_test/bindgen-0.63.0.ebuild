@@ -98,7 +98,7 @@ inherit cargo
 DESCRIPTION="Automatically generates Rust FFI bindings to C and C++ libraries."
 HOMEPAGE="https://rust-lang.github.io/rust-bindgen/"
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE="BSD"

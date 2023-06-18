@@ -81,7 +81,7 @@ inherit cargo
 DESCRIPTION="A python graph library implemented in Rust"
 HOMEPAGE=""
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE="Apache-2.0"

@@ -92,7 +92,7 @@ inherit cargo
 DESCRIPTION="Rustls is a modern TLS library written in Rust."
 HOMEPAGE="https://github.com/rustls/rustls"
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE="|| ( Apache-2.0 ISC MIT )"

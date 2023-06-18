@@ -309,7 +309,7 @@ inherit cargo
 DESCRIPTION="fast, encrypted, deduplicated backups powered by pure Rust"
 HOMEPAGE=""
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE="|| ( Apache-2.0 MIT )"

@@ -227,7 +227,7 @@ inherit cargo
 DESCRIPTION="A backend for \`mdbook\` which will check your links for you."
 HOMEPAGE=""
 SRC_URI="
-	$(cargo_crate_uris)
+	${CARGO_CRATE_URIS}
 "
 
 LICENSE="MIT"
