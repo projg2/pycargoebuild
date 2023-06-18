@@ -26,7 +26,7 @@ class Crate(typing.NamedTuple):
 
     @property
     def crate_entry(self) -> str:
-        return f"{self.name}-{self.version}"
+        return f"{self.name}@{self.version}"
 
 
 class PackageMetadata(typing.NamedTuple):
