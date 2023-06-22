@@ -153,6 +153,18 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                                f"{p!r}") from e
 
 
+def get_meta_key(key: str, pkg_meta: dict,
+                 workspace_pkg_meta: dict) -> typing.Optional[str]:
+    """Get a key from package metadata respecting ``workspace: true``"""
+    value = pkg_meta.get(key)
+
+    if isinstance(value, str) or value is None:
+        return value
+    if isinstance(value, dict) and value.get("workspace") is True:
+        return get_meta_key(key, workspace_pkg_meta, {})
+    raise ValueError(f"Invalid metadata key value: {key!r}={value!r}")
+
+
 def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     """Read package from the open ``Cargo.toml`` file"""
     cargo_toml = tomllib.load(f)
@@ -163,14 +175,24 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
             "pycargoebuild on one of its members instead: "
             f"{' '.join(cargo_toml['workspace']['members'])}")
 
+    workspace_pkg_meta = cargo_toml.get("workspace", {}).get("package", {})
     pkg_meta = cargo_toml["package"]
-    pkg_license = pkg_meta.get("license")
+    _get_meta_key = functools.partial(get_meta_key,
+                                      pkg_meta=pkg_meta,
+                                      workspace_pkg_meta=workspace_pkg_meta)
+
+    pkg_license = _get_meta_key("license")
     if pkg_license is not None:
         pkg_license = cargo_to_spdx(pkg_license)
+
+    pkg_version = _get_meta_key("version")
+    if pkg_version is None:
+        raise ValueError("Invalid package version")
+
     return PackageMetadata(
         name=pkg_meta["name"],
-        version=pkg_meta["version"],
+        version=pkg_version,
         license=pkg_license,
-        license_file=pkg_meta.get("license-file"),
-        description=pkg_meta.get("description"),
-        homepage=pkg_meta.get("homepage"))
+        license_file=_get_meta_key("license-file"),
+        description=_get_meta_key("description"),
+        homepage=_get_meta_key("homepage"))
