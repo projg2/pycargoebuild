@@ -102,6 +102,33 @@ def test_get_package_metadata(exclude):
             PackageMetadata(**data))  # type: ignore
 
 
+@pytest.mark.parametrize("exclude", ["", "description", "homepage", "license"])
+def test_get_package_metadata_workspace(exclude):
+    data: typing.Dict[str, typing.Optional[str]] = {
+        "version": "1.2.3",
+        "license": "MIT",
+        "description": "A test package",
+        "homepage": "https://example.com/test",
+    }
+
+    for k in exclude.split():
+        data[k] = None
+
+    input_toml = "[workspace.package]\n"
+    for k, v in data.items():
+        if v is not None:
+            input_toml += f'{k} = "{v}"\n'
+
+    input_toml += "[package]\nname = \"test\"\n"
+    for k, v in data.items():
+        if v is not None:
+            input_toml += f'{k}.workspace = true\n'
+
+    data["name"] = "test"
+    assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
+            PackageMetadata(**data))  # type: ignore
+
+
 def test_get_package_metadata_license_file():
     input_toml = """
         [package]
