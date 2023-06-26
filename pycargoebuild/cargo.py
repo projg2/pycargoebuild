@@ -1,6 +1,7 @@
 import dataclasses
 import sys
 import typing
+import urllib.parse
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -37,6 +38,20 @@ class FileCrate(Crate):
     @property
     def crate_entry(self) -> str:
         return f"{self.name}@{self.version}"
+
+
+@dataclasses.dataclass(frozen=True)
+class GitCrate(Crate):
+    repository: str
+    commit: str
+
+    @property
+    def download_url(self) -> str:
+        return f"{self.repository}/archive/{self.commit}.tar.gz"
+
+    @property
+    def filename(self) -> str:
+        return f"{self.repository.rpartition('/')[2]}-{self.commit}.gh.tar.gz"
 
 
 class PackageMetadata(typing.NamedTuple):
@@ -81,6 +96,22 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                 yield FileCrate(name=p["name"],
                                 version=p["version"],
                                 checksum=p["checksum"])
+            elif p["source"].startswith("git+https://github.com/"):
+                parsed_url = urllib.parse.urlsplit(p["source"])
+                if not parsed_url.fragment:
+                    raise RuntimeError(
+                        "Git crate with no fragment identifier (i.e. commit "
+                        f"identifier): {p['source']!r}")
+                repo = parsed_url.path.lstrip("/")
+                if repo.endswith(".git"):
+                    repo = repo[:-4]
+                if repo.count("/") != 1:
+                    raise RuntimeError(f"Invalid GitHub URL: {p['source']}")
+                yield GitCrate(
+                    name=p["name"],
+                    version=p["version"],
+                    repository=f"https://github.com/{repo}",
+                    commit=parsed_url.fragment)
             else:
                 raise RuntimeError(f"Unsupported crate source: {p['source']}")
         except KeyError as e:

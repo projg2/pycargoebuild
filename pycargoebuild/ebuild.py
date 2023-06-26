@@ -13,6 +13,7 @@ import license_expression
 from pycargoebuild import __version__
 from pycargoebuild.cargo import (Crate,
                                  FileCrate,
+                                 GitCrate,
                                  PackageMetadata,
                                  get_package_metadata,
                                  )
@@ -84,9 +85,15 @@ def get_license_from_crate(path: Path) -> typing.Optional[str]:
     Read the metadata from specified crate and return its license string
     """
 
-    assert path.name.endswith(".crate")
+    if path.name.endswith(".crate"):
+        basename = path.name[:-6]
+    elif path.name.endswith(".gh.tar.gz"):
+        basename = path.name[:-10]
+    else:
+        raise NotImplementedError(f"Crate name not recognized: {path.name}")
+
     with tarfile.open(path, "r:gz") as crate:
-        tarf = crate.extractfile(f"{path.name[:-6]}/Cargo.toml")
+        tarf = crate.extractfile(f"{basename}/Cargo.toml")
         if tarf is None:
             raise RuntimeError(f"Cargo.toml not found in {path}")
         with tarf:
@@ -164,6 +171,10 @@ def get_ebuild(pkg_meta: PackageMetadata,
         template += EBUILD_TEMPLATE_CRATE_LICENSE
     template += EBUILD_TEMPLATE_END
 
+    if any(isinstance(crate, GitCrate) for crate in crates):
+        logging.warning(
+            "Package uses GIT_CRATES that are not currently supported")
+
     crate_files = [distdir / crate.filename for crate in crates]
     return template.format(
         crates=get_CRATES(crates),
@@ -223,5 +234,9 @@ def update_ebuild(ebuild: str,
     crates_repl.assert_count("CRATES=", 1)
     crate_license_repl.assert_count(
         "Crate LICENSE+= (with marker comment)", 1 if crate_license else 0)
+
+    if any(isinstance(crate, GitCrate) for crate in crates):
+        logging.warning(
+            "Package uses GIT_CRATES that are not currently supported")
 
     return ebuild
