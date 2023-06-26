@@ -80,22 +80,25 @@ def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
     return ""
 
 
-def get_license_from_crate(path: Path) -> typing.Optional[str]:
+def get_license_from_crate(crate: Crate,
+                           distdir: Path,
+                           ) -> typing.Optional[str]:
     """
     Read the metadata from specified crate and return its license string
     """
 
-    if path.name.endswith(".crate"):
-        basename = path.name[:-6]
-    elif path.name.endswith(".gh.tar.gz"):
-        basename = path.name[:-10]
+    filename = crate.filename
+    if filename.endswith(".crate"):
+        basename = filename[:-6]
+    elif filename.endswith(".gh.tar.gz"):
+        basename = filename[:-10]
     else:
-        raise NotImplementedError(f"Crate name not recognized: {path.name}")
+        raise NotImplementedError(f"Crate name not recognized: {filename}")
 
-    with tarfile.open(path, "r:gz") as crate:
-        tarf = crate.extractfile(f"{basename}/Cargo.toml")
+    with tarfile.open(distdir / filename, "r:gz") as crate_tar:
+        tarf = crate_tar.extractfile(f"{basename}/Cargo.toml")
         if tarf is None:
-            raise RuntimeError(f"Cargo.toml not found in {path}")
+            raise RuntimeError(f"Cargo.toml not found in {filename}")
         with tarf:
             # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
             # expects BinaryIO -- but it actually is compatible
@@ -103,23 +106,26 @@ def get_license_from_crate(path: Path) -> typing.Optional[str]:
             crate_metadata = get_package_metadata(tarf)  # type: ignore
             if crate_metadata.license_file is not None:
                 logging.warning(
-                    f"Crate {path.name} uses license-file="
+                    f"Crate {filename} uses license-file="
                     f"{crate_metadata.license_file!r}, please inspect "
                     "the license manually and add it *separately* from crate "
                     "licenses")
             elif crate_metadata.license is None:
                 raise RuntimeError(
-                    f"Crate {path.name} does not specify a license!")
+                    f"Crate {filename} does not specify a license!")
             return crate_metadata.license
 
 
-def get_crate_LICENSE(crate_files: typing.Iterable[Path]) -> str:
+def get_crate_LICENSE(crates: typing.Iterable[Crate],
+                      distdir: Path,
+                      ) -> str:
     """
     Get the value of LICENSE string for crates
     """
 
     spdx = license_expression.get_spdx_licensing()
-    crate_licenses = set(map(get_license_from_crate, crate_files))
+    crate_licenses = set(get_license_from_crate(crate, distdir)
+                         for crate in crates)
     crate_licenses.discard(None)
 
     # combine crate licenses and simplify the result
@@ -175,10 +181,9 @@ def get_ebuild(pkg_meta: PackageMetadata,
         logging.warning(
             "Package uses GIT_CRATES that are not currently supported")
 
-    crate_files = [distdir / crate.filename for crate in crates]
     return template.format(
         crates=get_CRATES(crates),
-        crate_licenses=get_crate_LICENSE(crate_files),
+        crate_licenses=get_crate_LICENSE(crates, distdir),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
@@ -224,9 +229,9 @@ def update_ebuild(ebuild: str,
     Update the CRATES and LICENSE in an existing ebuild
     """
 
-    crate_files = [distdir / crate.filename for crate in crates]
     crates_repl = CountingSubst(partial(get_CRATES, crates))
-    crate_license_repl = CountingSubst(partial(get_crate_LICENSE, crate_files))
+    crate_license_repl = (
+        CountingSubst(partial(get_crate_LICENSE, crates, distdir)))
 
     ebuild = CRATE_LICENSE_RE.sub(crate_license_repl,
                                   CRATES_RE.sub(crates_repl, ebuild))
