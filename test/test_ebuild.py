@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from pycargoebuild import __version__
-from pycargoebuild.cargo import Crate, PackageMetadata
+from pycargoebuild.cargo import FileCrate, PackageMetadata
 from pycargoebuild.ebuild import (get_ebuild, update_ebuild,
                                   collapse_whitespace, bash_dquote_escape,
                                   url_dquote_escape,
@@ -58,10 +58,10 @@ def crate_dir(tmp_path_factory) -> typing.Generator[Path, None, None]:
 
 @pytest.fixture(scope="session")
 def crates(crate_dir: Path
-           ) -> typing.Generator[typing.List[Crate], None, None]:
-    yield [Crate("foo", "1", ""),
-           Crate("bar", "2", ""),
-           Crate("baz", "3", ""),
+           ) -> typing.Generator[typing.List[FileCrate], None, None]:
+    yield [FileCrate("foo", "1", ""),
+           FileCrate("bar", "2", ""),
+           FileCrate("baz", "3", ""),
            ]
 
 

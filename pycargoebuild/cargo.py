@@ -1,3 +1,4 @@
+import dataclasses
 import sys
 import typing
 
@@ -10,17 +11,26 @@ else:
 CRATE_REGISTRY = "registry+https://github.com/rust-lang/crates.io-index"
 
 
-class Crate(typing.NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class Crate:
     name: str
     version: str
-    checksum: str
 
     @property
     def filename(self) -> str:
         return f"{self.name}-{self.version}.crate"
 
     @property
-    def crates_io_url(self) -> str:
+    def download_url(self) -> str:
+        raise NotImplementedError()
+
+
+@dataclasses.dataclass(frozen=True)
+class FileCrate(Crate):
+    checksum: str
+
+    @property
+    def download_url(self) -> str:
         return (f"https://crates.io/api/v1/crates/{self.name}/{self.version}/"
                 "download")
 
@@ -69,9 +79,9 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
             raise RuntimeError(f"Unsupported crate source: {p['source']}")
 
         try:
-            yield Crate(name=p["name"],
-                        version=p["version"],
-                        checksum=p["checksum"])
+            yield FileCrate(name=p["name"],
+                            version=p["version"],
+                            checksum=p["checksum"])
         except KeyError as e:
             raise RuntimeError("Incorrect/insufficient metadata for crate: "
                                f"{p!r}") from e

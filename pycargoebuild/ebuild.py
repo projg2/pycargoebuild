@@ -11,7 +11,11 @@ from pathlib import Path
 import license_expression
 
 from pycargoebuild import __version__
-from pycargoebuild.cargo import Crate, PackageMetadata, get_package_metadata
+from pycargoebuild.cargo import (Crate,
+                                 FileCrate,
+                                 PackageMetadata,
+                                 get_package_metadata,
+                                 )
 from pycargoebuild.format import format_license_var
 from pycargoebuild.license import spdx_to_ebuild
 
@@ -55,7 +59,9 @@ def get_CRATES(crates: typing.Iterable[Crate]) -> str:
     if not crates:
         return ""
     return ("\n" +
-            "\n".join(sorted(f"\t{c.crate_entry}" for c in crates)) +
+            "\n".join(sorted(f"\t{c.crate_entry}"
+                             for c in crates
+                             if isinstance(c, FileCrate))) +
             "\n")
 
 

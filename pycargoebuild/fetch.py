@@ -5,7 +5,7 @@ import typing
 
 from pathlib import Path
 
-from pycargoebuild.cargo import Crate
+from pycargoebuild.cargo import Crate, FileCrate
 
 
 def fetch_crates_using_aria2(crates: typing.Iterable[Crate], *, distdir: Path
@@ -15,7 +15,7 @@ def fetch_crates_using_aria2(crates: typing.Iterable[Crate], *, distdir: Path
     """
 
     distdir.mkdir(parents=True, exist_ok=True)
-    crate_urls = [crate.crates_io_url
+    crate_urls = [crate.download_url
                   for crate in crates
                   if not (distdir / crate.filename).exists()]
     if crate_urls:
@@ -45,7 +45,7 @@ def fetch_crates_using_wget(crates: typing.Iterable[Crate], *, distdir: Path
 
     distdir.mkdir(parents=True, exist_ok=True)
     fetch_files_using_wget(
-        (crate.crates_io_url, distdir / crate.filename) for crate in crates)
+        (crate.download_url, distdir / crate.filename) for crate in crates)
 
 
 def verify_files(files: typing.Iterable[typing.Tuple[Path, str]]) -> None:
@@ -74,5 +74,6 @@ def verify_crates(crates: typing.Iterable[Crate], *, distdir: Path) -> None:
     Verify checksums of crates fetched into distdir
     """
 
-    verify_files(
-        (distdir / crate.filename, crate.checksum) for crate in crates)
+    verify_files((distdir / crate.filename, crate.checksum)
+                 for crate in crates
+                 if isinstance(crate, FileCrate))
