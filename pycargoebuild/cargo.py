@@ -75,13 +75,14 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
         # Skip all crates without "source", they should be local.
         if "source" not in p:
             continue
-        if p["source"] != CRATE_REGISTRY:
-            raise RuntimeError(f"Unsupported crate source: {p['source']}")
 
         try:
-            yield FileCrate(name=p["name"],
-                            version=p["version"],
-                            checksum=p["checksum"])
+            if p["source"] == CRATE_REGISTRY:
+                yield FileCrate(name=p["name"],
+                                version=p["version"],
+                                checksum=p["checksum"])
+            else:
+                raise RuntimeError(f"Unsupported crate source: {p['source']}")
         except KeyError as e:
             raise RuntimeError("Incorrect/insufficient metadata for crate: "
                                f"{p!r}") from e
