@@ -4,7 +4,7 @@ jobs:
   ci:
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11.0-alpha - 3.11", "pypy-3.8", "pypy-3.9"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12-dev", "pypy-3.8", "pypy-3.9"]
         suite: ["py", "integration"]
       fail-fast: false
     runs-on: ubuntu-latest
