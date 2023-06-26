@@ -3,8 +3,13 @@ import typing
 
 import pytest
 
-from pycargoebuild.cargo import (FileCrate, cargo_to_spdx, get_crates,
-                                 get_package_metadata, PackageMetadata)
+from pycargoebuild.cargo import (FileCrate,
+                                 GitCrate,
+                                 cargo_to_spdx,
+                                 get_crates,
+                                 get_package_metadata,
+                                 PackageMetadata,
+                                 )
 
 
 CARGO_LOCK_TOML = b'''
@@ -41,6 +46,12 @@ CARGO_LOCK_TOML = b'''
      "fsevent-sys",
      "test",
     ]
+
+    [[package]]
+    name = "regex-syntax"
+    version = "0.6.28"
+    source = """git+https://github.com/01mf02/regex?rev=90eebbd\\
+                #90eebbdb9396ca10510130327073a3d596674d04"""
 '''
 
 CRATES = [
@@ -50,6 +61,9 @@ CRATES = [
                                       "be2f45ddb3ef3032d2ec8185f6313fd2"),
     FileCrate("test", "1.2.3", "76ee7a02da4d231650c7cea31349b889"
                                "be2f45ddb3ef3032d2ec8185f6313fd2"),
+    GitCrate("regex-syntax", "0.6.28",
+             "https://github.com/01mf02/regex",
+             "90eebbdb9396ca10510130327073a3d596674d04"),
 ]
 
 
