@@ -1,6 +1,7 @@
 import hashlib
 import subprocess
 import sys
+import tempfile
 import typing
 
 from pathlib import Path
@@ -15,12 +16,20 @@ def fetch_crates_using_aria2(crates: typing.Iterable[Crate], *, distdir: Path
     """
 
     distdir.mkdir(parents=True, exist_ok=True)
-    crate_urls = [crate.download_url
-                  for crate in crates
-                  if not (distdir / crate.filename).exists()]
-    if crate_urls:
+    with tempfile.NamedTemporaryFile("w+") as file_list_f:
+        for crate in crates:
+            if not (distdir / crate.filename).exists():
+                file_list_f.write(
+                    f"{crate.download_url}\n\tout={crate.filename}\n")
+
+        if file_list_f.tell() == 0:
+            # no crates to fetch
+            return
+
+        file_list_f.flush()
+
         subprocess.check_call(
-            ["aria2c", "-Z", "-d", str(distdir)] + crate_urls,
+            ["aria2c", "-d", str(distdir), "-i", file_list_f.name],
             stdout=sys.stderr)
 
 
