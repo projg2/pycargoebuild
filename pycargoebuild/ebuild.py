@@ -88,15 +88,8 @@ def get_license_from_crate(crate: Crate,
     """
 
     filename = crate.filename
-    if filename.endswith(".crate"):
-        basename = filename[:-6]
-    elif filename.endswith(".gh.tar.gz"):
-        basename = filename[:-10]
-    else:
-        raise NotImplementedError(f"Crate name not recognized: {filename}")
-
     with tarfile.open(distdir / filename, "r:gz") as crate_tar:
-        tarf = crate_tar.extractfile(f"{basename}/Cargo.toml")
+        tarf = crate_tar.extractfile(f"{crate.package_directory}/Cargo.toml")
         if tarf is None:
             raise RuntimeError(f"Cargo.toml not found in {filename}")
         with tarf:

@@ -22,6 +22,10 @@ class Crate:
         return f"{self.name}-{self.version}.crate"
 
     @property
+    def package_directory(self) -> str:
+        return f"{self.name}-{self.version}"
+
+    @property
     def download_url(self) -> str:
         raise NotImplementedError()
 
@@ -52,6 +56,8 @@ class GitCrate(Crate):
     @property
     def filename(self) -> str:
         return f"{self.repository.rpartition('/')[2]}-{self.commit}.gh.tar.gz"
+
+    # TODO: implement package_directory properly
 
 
 class PackageMetadata(typing.NamedTuple):
