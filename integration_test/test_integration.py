@@ -50,6 +50,12 @@ PACKAGES = {
                  "82a519f157fba6cf1d54f1e4e6718b99",
         directories=["jaq-0.10.0/jaq", "jaq-0.10.0/jaq-core",
                      "jaq-0.10.0/jaq-parse", "jaq-0.10.0/jaq-std"]),
+    "lemmy_server-0.18.0.ebuild": Package(
+        url="https://github.com/LemmyNet/lemmy/archive/0.18.0.tar.gz",
+        checksum="dff7ce501cade3aed2427268d48a27ea"
+                 "646159b3e6293db6ff0b78ef46ecba0d",
+        directories=["lemmy-0.18.0"],
+        uses_license_file=True),
     "mdbook-linkcheck-0.7.7.ebuild": Package(
         url="https://github.com/Michael-F-Bryan/mdbook-linkcheck/archive/"
             "v0.7.7.tar.gz",
