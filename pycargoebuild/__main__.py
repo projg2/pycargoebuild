@@ -162,8 +162,8 @@ def main(prog_name: str, *argv: str) -> int:
                                distdir=args.distdir,
                                crate_license=not args.no_license)
         logging.warning(
-            "The in-place mode updates CRATES and crate LICENSE+= variables "
-            "only, other metadata is left unchanged")
+            "The in-place mode updates CRATES, GIT_CRATES and crate "
+            "LICENSE+= variables only, other metadata is left unchanged")
     else:
         ebuild = get_ebuild(pkg_meta,
                             crates,

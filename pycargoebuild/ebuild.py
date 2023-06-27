@@ -202,9 +202,17 @@ CRATES_RE = re.compile(
     r"^(?P<start>CRATES=(?P<delim>['\"])).*?(?P=delim)$",
     re.DOTALL | re.MULTILINE)
 
+GIT_CRATES_RE = re.compile(
+    r"(?P<ws>\n\n?)declare -A GIT_CRATES=[(].*?[)]$",
+    re.DOTALL | re.MULTILINE)
+
 CRATE_LICENSE_RE = re.compile(
     r"^(?P<start># Dependent crate licenses\n"
     r"LICENSE[+]=(?P<delim>['\"])).*?(?P=delim)$",
+    re.DOTALL | re.MULTILINE)
+
+GIT_CRATES_APPEND_RE = re.compile(
+    r"^(?P<start>CRATES=(?P<delim2>['\"]).*?(?P=delim2))(?P<delim>)$",
     re.DOTALL | re.MULTILINE)
 
 
@@ -224,6 +232,14 @@ class CountingSubst:
                 f"{desc} matched {self.count} times, {expected} expected")
 
 
+class GitCratesSubst(CountingSubst):
+    def __call__(self, match: re.Match) -> str:
+        self.count += 1
+        if repl := self.repl().lstrip():
+            return match.group("ws") + repl
+        return ""
+
+
 def update_ebuild(ebuild: str,
                   pkg_meta: PackageMetadata,
                   crates: typing.Iterable[Crate],
@@ -232,22 +248,30 @@ def update_ebuild(ebuild: str,
                   crate_license: bool = True,
                   ) -> str:
     """
-    Update the CRATES and LICENSE in an existing ebuild
+    Update the CRATES, GIT_CRATES and LICENSE in an existing ebuild
     """
 
     crates_repl = CountingSubst(partial(get_CRATES, crates))
+    git_crates_repl = GitCratesSubst(partial(get_GIT_CRATES, crates, distdir))
     crate_license_repl = (
         CountingSubst(partial(get_crate_LICENSE, crates, distdir)))
 
-    ebuild = CRATE_LICENSE_RE.sub(crate_license_repl,
-                                  CRATES_RE.sub(crates_repl, ebuild))
+    for regex, repl in ((CRATES_RE, crates_repl),
+                        (GIT_CRATES_RE, git_crates_repl),
+                        (CRATE_LICENSE_RE, crate_license_repl)):
+        ebuild = regex.sub(repl, ebuild)
 
     crates_repl.assert_count("CRATES=", 1)
     crate_license_repl.assert_count(
         "Crate LICENSE+= (with marker comment)", 1 if crate_license else 0)
 
-    if any(isinstance(crate, GitCrate) for crate in crates):
-        logging.warning(
-            "Package uses GIT_CRATES that are not currently being updated")
+    if git_crates_repl.count == 0:
+        if git_crates := git_crates_repl.repl():
+            git_crates_append = CountingSubst(lambda: git_crates)
+            ebuild = GIT_CRATES_APPEND_RE.sub(git_crates_append, ebuild)
+            git_crates_append.assert_count(
+                "CRATES= (while appending GIT_CRATES=)", 1)
+    else:
+        git_crates_repl.assert_count("GIT_CRATES=", 1)
 
     return ebuild

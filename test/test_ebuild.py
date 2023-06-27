@@ -382,6 +382,151 @@ def test_update_ebuild_fail_with_crate_license(real_license_mapping,
             """), pkg_meta, crates, crate_dir, crate_license=False)
 
 
+def test_update_git_crates(real_license_mapping, pkg_meta, crate_dir,
+                           crates_plus_git):
+    old_ebuild = textwrap.dedent("""\
+        EAPI=8
+
+        CRATES="
+        \tbar@2
+        \tbaz@3
+        \tfoo@1
+        "
+
+        declare -A GIT_CRATES=(
+        \t[else]='total-junk-here'
+        \t[something]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        )
+
+        inherit cargo
+
+        LICENSE="|| ( Apache-2.0 MIT )"
+        # Dependent crate licenses
+        LICENSE+="
+        \tMIT Unicode-DFS-2016
+        \t|| ( CC0-1.0 Unlicense )
+        "
+    """)
+
+    assert update_ebuild(old_ebuild, pkg_meta, crates_plus_git, crate_dir
+                         ) == textwrap.dedent("""\
+        EAPI=8
+
+        CRATES="
+        \tbar@2
+        \tbaz@3
+        \tfoo@1
+        "
+
+        declare -A GIT_CRATES=(
+        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        )
+
+        inherit cargo
+
+        LICENSE="|| ( Apache-2.0 MIT )"
+        # Dependent crate licenses
+        LICENSE+="
+        \tMIT Unicode-DFS-2016
+        \t|| ( CC0-1.0 Unlicense )
+        "
+    """)
+
+
+def test_update_remove_git_crates(real_license_mapping, pkg_meta, crate_dir,
+                                  crates):
+    old_ebuild = textwrap.dedent("""\
+        EAPI=8
+
+        CRATES="
+        \tbar@2
+        \tbaz@3
+        \tfoo@1
+        "
+
+        declare -A GIT_CRATES=(
+        \t[else]='total-junk-here'
+        \t[something]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        )
+
+        inherit cargo
+
+        LICENSE="|| ( Apache-2.0 MIT )"
+        # Dependent crate licenses
+        LICENSE+="
+        \tMIT Unicode-DFS-2016
+        \t|| ( CC0-1.0 Unlicense )
+        "
+    """)
+
+    assert update_ebuild(old_ebuild, pkg_meta, crates, crate_dir
+                         ) == textwrap.dedent("""\
+        EAPI=8
+
+        CRATES="
+        \tbar@2
+        \tbaz@3
+        \tfoo@1
+        "
+
+        inherit cargo
+
+        LICENSE="|| ( Apache-2.0 MIT )"
+        # Dependent crate licenses
+        LICENSE+="
+        \tUnicode-DFS-2016
+        \t|| ( BSD MIT )
+        \t|| ( CC0-1.0 Unlicense )
+        "
+    """)
+
+
+def test_update_add_git_crates(real_license_mapping, pkg_meta, crate_dir,
+                               crates_plus_git):
+    old_ebuild = textwrap.dedent("""\
+        EAPI=8
+
+        CRATES="
+        \tbar@2
+        \tbaz@3
+        \tfoo@1
+        "
+
+        inherit cargo
+
+        LICENSE="|| ( Apache-2.0 MIT )"
+        # Dependent crate licenses
+        LICENSE+="
+        \tMIT Unicode-DFS-2016
+        \t|| ( CC0-1.0 Unlicense )
+        "
+    """)
+
+    assert update_ebuild(old_ebuild, pkg_meta, crates_plus_git, crate_dir
+                         ) == textwrap.dedent("""\
+        EAPI=8
+
+        CRATES="
+        \tbar@2
+        \tbaz@3
+        \tfoo@1
+        "
+
+        declare -A GIT_CRATES=(
+        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        )
+
+        inherit cargo
+
+        LICENSE="|| ( Apache-2.0 MIT )"
+        # Dependent crate licenses
+        LICENSE+="
+        \tMIT Unicode-DFS-2016
+        \t|| ( CC0-1.0 Unlicense )
+        "
+    """)
+
+
 def test_collapse_whitespace():
     assert collapse_whitespace("\tfoo  bar \n baz \u00A0") == "foo bar baz"
 
