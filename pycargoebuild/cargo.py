@@ -82,6 +82,11 @@ class GitCrate(Crate):
         raise RuntimeError(f"Package {self.name} not found in crate "
                            f"{distdir / self.filename}")
 
+    def get_git_crate_entry(self, distdir: Path) -> str:
+        subdir = (str(self.get_package_directory(distdir))
+                  .replace(self.commit, "%commit%"))
+        return f"{self.repository};{self.commit};{subdir}"
+
 
 class PackageMetadata(typing.NamedTuple):
     name: str

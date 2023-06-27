@@ -29,7 +29,7 @@ EBUILD_TEMPLATE_START = """\
 
 EAPI=8
 
-CRATES="{crates}"
+CRATES="{crates}"{opt_git_crates}
 
 inherit cargo
 
@@ -64,6 +64,21 @@ def get_CRATES(crates: typing.Iterable[Crate]) -> str:
                              for c in crates
                              if isinstance(c, FileCrate))) +
             "\n")
+
+
+def get_GIT_CRATES(crates: typing.Iterable[Crate],
+                   distdir: Path,
+                   ) -> str:
+    """
+    Return the complete GIT_CRATES assignment for the given crate list
+    """
+
+    values = "\n".join(
+        sorted(f"\t[{c.name}]={c.get_git_crate_entry(distdir)!r}"
+               for c in crates if isinstance(c, GitCrate)))
+    if values:
+        return f"\n\ndeclare -A GIT_CRATES=(\n{values}\n)"
+    return ""
 
 
 def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
@@ -171,16 +186,13 @@ def get_ebuild(pkg_meta: PackageMetadata,
         template += EBUILD_TEMPLATE_CRATE_LICENSE
     template += EBUILD_TEMPLATE_END
 
-    if any(isinstance(crate, GitCrate) for crate in crates):
-        logging.warning(
-            "Package uses GIT_CRATES that are not currently supported")
-
     return template.format(
         crates=get_CRATES(crates),
         crate_licenses=get_crate_LICENSE(crates, distdir),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
+        opt_git_crates=get_GIT_CRATES(crates, distdir),
         pkg_license=get_package_LICENSE(pkg_meta),
         prog_version=__version__,
         year=datetime.date.today().year)
@@ -236,6 +248,6 @@ def update_ebuild(ebuild: str,
 
     if any(isinstance(crate, GitCrate) for crate in crates):
         logging.warning(
-            "Package uses GIT_CRATES that are not currently supported")
+            "Package uses GIT_CRATES that are not currently being updated")
 
     return ebuild
