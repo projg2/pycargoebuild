@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+import shlex
 import tarfile
 import typing
 import urllib.parse
@@ -74,7 +75,7 @@ def get_GIT_CRATES(crates: typing.Iterable[Crate],
     """
 
     values = "\n".join(
-        sorted(f"\t[{c.name}]={c.get_git_crate_entry(distdir)!r}"
+        sorted(f"\t[{c.name}]={shlex.quote(c.get_git_crate_entry(distdir))}"
                for c in crates if isinstance(c, GitCrate)))
     if values:
         return f"\n\ndeclare -A GIT_CRATES=(\n{values}\n)"
