@@ -195,7 +195,7 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
 
     pkg_version = _get_meta_key("version")
     if pkg_version is None:
-        raise ValueError("Invalid package version")
+        raise ValueError(f"No version found in {f.name}")
 
     return PackageMetadata(
         name=pkg_meta["name"],
