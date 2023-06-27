@@ -173,7 +173,9 @@ def get_meta_key(key: str, pkg_meta: dict,
     raise ValueError(f"Invalid metadata key value: {key!r}={value!r}")
 
 
-def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
+def get_package_metadata(f: typing.BinaryIO,
+                         workspace_pkg_meta: dict = {},
+                         ) -> PackageMetadata:
     """Read package from the open ``Cargo.toml`` file"""
     cargo_toml = tomllib.load(f)
 
@@ -183,7 +185,6 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
             "pycargoebuild on one of its members instead: "
             f"{' '.join(cargo_toml['workspace']['members'])}")
 
-    workspace_pkg_meta = cargo_toml.get("workspace", {}).get("package", {})
     pkg_meta = cargo_toml["package"]
     _get_meta_key = functools.partial(get_meta_key,
                                       pkg_meta=pkg_meta,

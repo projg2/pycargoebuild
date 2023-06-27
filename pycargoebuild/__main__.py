@@ -141,7 +141,8 @@ def main(prog_name: str, *argv: str) -> int:
         with open(directory / "Cargo.toml", "rb") as f:
             workspace = get_workspace_root(directory)
             crates.update(workspace.crates)
-            pkg_metas.append(get_package_metadata(f))
+            pkg_metas.append(
+                get_package_metadata(f, workspace.workspace_metadata))
     pkg_meta = pkg_metas[0]
 
     if args.no_license:

@@ -114,18 +114,14 @@ def test_get_package_metadata_workspace(exclude):
     for k in exclude.split():
         data[k] = None
 
-    input_toml = "[workspace.package]\n"
-    for k, v in data.items():
-        if v is not None:
-            input_toml += f'{k} = "{v}"\n'
-
-    input_toml += "[package]\nname = \"test\"\n"
+    input_toml = "[package]\nname = \"test\"\n"
     for k, v in data.items():
         if v is not None:
             input_toml += f'{k}.workspace = true\n'
 
     data["name"] = "test"
-    assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
+    assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8")),
+                                 data) ==
             PackageMetadata(**data))  # type: ignore
 
 
