@@ -8,6 +8,11 @@ import typing
 
 from pathlib import Path
 
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
+
 from pycargoebuild.cargo import Crate, get_crates, get_package_metadata
 from pycargoebuild.ebuild import get_ebuild, update_ebuild
 from pycargoebuild.fetch import (fetch_crates_using_wget,
@@ -17,6 +22,11 @@ from pycargoebuild.license import load_license_mapping
 
 
 FETCHERS = ("aria2", "wget")
+
+
+class WorkspaceData(typing.NamedTuple):
+    crates: typing.FrozenSet[Crate]
+    workspace_metadata: dict
 
 
 def main(prog_name: str, *argv: str) -> int:
@@ -78,13 +88,23 @@ def main(prog_name: str, *argv: str) -> int:
             directory /= ".."
             yield directory
 
-    def get_crates_from_cargo_lock(directory: Path,
-                                   ) -> typing.FrozenSet[Crate]:
+    def get_workspace_root(directory: Path) -> WorkspaceData:
         err: typing.Optional[Exception] = None
         for directory in iterate_parents(directory):
             try:
-                with open(directory / "Cargo.lock", "rb") as f:
-                    return frozenset(get_crates(f))
+                with open(directory / "Cargo.lock", "rb") as cargo_lock:
+                    try:
+                        with open(directory / "Cargo.toml",
+                                  "rb") as cargo_toml:
+                            workspace_toml = (
+                                tomllib.load(cargo_toml).get("workspace", {})
+                                                        .get("package", {}))
+                    except FileNotFoundError:
+                        workspace_toml = {}
+
+                    return WorkspaceData(
+                        crates=frozenset(get_crates(cargo_lock)),
+                        workspace_metadata=workspace_toml)
             except FileNotFoundError as e:
                 if err is None:
                     err = e
@@ -119,8 +139,9 @@ def main(prog_name: str, *argv: str) -> int:
     pkg_metas = []
     for directory in args.directory:
         with open(directory / "Cargo.toml", "rb") as f:
+            workspace = get_workspace_root(directory)
+            crates.update(workspace.crates)
             pkg_metas.append(get_package_metadata(f))
-        crates.update(get_crates_from_cargo_lock(directory))
     pkg_meta = pkg_metas[0]
 
     if args.no_license:

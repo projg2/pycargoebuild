@@ -151,9 +151,13 @@ def test_integration(tmp_path, capfd, caplog, ebuild):
                     member_lock = tarf.getmember(f"{current}/Cargo.lock")
                 except KeyError:
                     continue
+                else:
+                    member_workspace = tarf.getmember(f"{current}/Cargo.toml")
                 break
             assert member_lock is not None
+            assert member_workspace is not None
             tarf.extract(member_lock, tmp_path, set_attrs=False)
+            tarf.extract(member_workspace, tmp_path, set_attrs=False)
 
     args = ["-d", str(dist_dir),
             "-l", str(test_dir / "license-mapping.conf"),
