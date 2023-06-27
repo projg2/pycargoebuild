@@ -74,7 +74,10 @@ class GitCrate(Crate):
                     # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
                     # expects BinaryIO -- but it actually is compatible
                     # https://github.com/hukkin/tomli/issues/214
-                    metadata = get_package_metadata(f)  # type: ignore
+                    try:
+                        metadata = get_package_metadata(f)  # type: ignore
+                    except WorkspaceCargoTomlError:
+                        continue
                     if (metadata.name == self.name and
                             metadata.version == self.version):
                         return path.parent
@@ -104,6 +107,11 @@ class PackageMetadata(typing.NamedTuple):
                                license_file=None,
                                description=self.description,
                                homepage=self.homepage)
+
+
+class WorkspaceCargoTomlError(RuntimeError):
+    """Cargo.toml belongs to a workspace root"""
+    pass
 
 
 def cargo_to_spdx(license_str: str) -> str:
@@ -170,7 +178,7 @@ def get_package_metadata(f: typing.BinaryIO) -> PackageMetadata:
     cargo_toml = tomllib.load(f)
 
     if "package" not in cargo_toml and "workspace" in cargo_toml:
-        raise RuntimeError(
+        raise WorkspaceCargoTomlError(
             "Specified directory seems to be a workspace root, please run "
             "pycargoebuild on one of its members instead: "
             f"{' '.join(cargo_toml['workspace']['members'])}")
