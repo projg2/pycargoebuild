@@ -3,6 +3,8 @@ import sys
 import typing
 import urllib.parse
 
+from pathlib import Path, PurePath
+
 if sys.version_info >= (3, 11):
     import tomllib
 else:
@@ -21,9 +23,8 @@ class Crate:
     def filename(self) -> str:
         return f"{self.name}-{self.version}.crate"
 
-    @property
-    def package_directory(self) -> str:
-        return f"{self.name}-{self.version}"
+    def get_package_directory(self, distdir: Path) -> PurePath:
+        return PurePath(f"{self.name}-{self.version}")
 
     @property
     def download_url(self) -> str:
@@ -57,7 +58,7 @@ class GitCrate(Crate):
     def filename(self) -> str:
         return f"{self.repository.rpartition('/')[2]}-{self.commit}.gh.tar.gz"
 
-    # TODO: implement package_directory properly
+    # TODO: implement get_package_directory properly
 
 
 class PackageMetadata(typing.NamedTuple):

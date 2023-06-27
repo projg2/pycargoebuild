@@ -89,7 +89,8 @@ def get_license_from_crate(crate: Crate,
 
     filename = crate.filename
     with tarfile.open(distdir / filename, "r:gz") as crate_tar:
-        tarf = crate_tar.extractfile(f"{crate.package_directory}/Cargo.toml")
+        tarf = crate_tar.extractfile(
+            str(crate.get_package_directory(distdir) / "Cargo.toml"))
         if tarf is None:
             raise RuntimeError(f"Cargo.toml not found in {filename}")
         with tarf:
