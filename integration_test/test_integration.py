@@ -44,6 +44,12 @@ PACKAGES = {
                  "f734735b49ee45b11324d85efc4d5cbd",
         directories=["cryptography-38.0.3/src/rust"],
         expected_filename="cryptography-rust-0.1.0.ebuild"),
+    "jaq-0.10.0.ebuild": Package(
+        url="https://github.com/01mf02/jaq/archive/v0.10.0.tar.gz",
+        checksum="ea54e2675ccd7ea9fe900343cea92635"
+                 "82a519f157fba6cf1d54f1e4e6718b99",
+        directories=["jaq-0.10.0/jaq", "jaq-0.10.0/jaq-core",
+                     "jaq-0.10.0/jaq-parse", "jaq-0.10.0/jaq-std"]),
     "mdbook-linkcheck-0.7.7.ebuild": Package(
         url="https://github.com/Michael-F-Bryan/mdbook-linkcheck/archive/"
             "v0.7.7.tar.gz",
