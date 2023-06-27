@@ -1,5 +1,7 @@
 import dataclasses
+import functools
 import sys
+import tarfile
 import typing
 import urllib.parse
 
@@ -58,7 +60,27 @@ class GitCrate(Crate):
     def filename(self) -> str:
         return f"{self.repository.rpartition('/')[2]}-{self.commit}.gh.tar.gz"
 
-    # TODO: implement get_package_directory properly
+    @functools.cache
+    def get_package_directory(self, distdir: Path) -> PurePath:
+        # TODO: perhaps it'd be more correct to follow workspaces
+        with tarfile.open(distdir / self.filename, "r:gz") as crate_tar:
+            while (tar_info := crate_tar.next()) is not None:
+                path = PurePath(tar_info.name)
+                if path.name == "Cargo.toml":
+                    f = crate_tar.extractfile(tar_info)
+                    if f is None:
+                        continue
+
+                    # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
+                    # expects BinaryIO -- but it actually is compatible
+                    # https://github.com/hukkin/tomli/issues/214
+                    metadata = get_package_metadata(f)  # type: ignore
+                    if (metadata.name == self.name and
+                            metadata.version == self.version):
+                        return path.parent
+
+        raise RuntimeError(f"Package {self.name} not found in crate "
+                           f"{distdir / self.filename}")
 
 
 class PackageMetadata(typing.NamedTuple):

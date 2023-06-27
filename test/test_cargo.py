@@ -1,5 +1,8 @@
 import io
+import tarfile
 import typing
+
+from pathlib import PurePath
 
 import pytest
 
@@ -111,3 +114,50 @@ def test_get_package_metadata_license_file():
             PackageMetadata(name="test",
                             version="0",
                             license_file="COPYING"))
+
+
+TOP_CARGO_TOML = b"""\
+[package]
+name = "toplevel"
+version = "0.1"
+license = "MIT"
+
+[workspace]
+members = ["sub"]
+"""
+
+SUB_CARGO_TOML = b"""\
+[package]
+name = "subpkg"
+version = "0.1"
+license = "MIT"
+"""
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [("toplevel", ""),
+     ("subpkg", "sub"),
+     ("nonexistent", RuntimeError),
+     ])
+def test_git_crate_package_directory(tmp_path, name, expected):
+    commit = "5ace474ad2e92da836de60afd9014cbae7bdd481"
+    crate = GitCrate(name, "0.1",
+                     "https://github.com/projg2/pycargoebuild",
+                     commit)
+    basename = f"pycargoebuild-{commit}"
+
+    with tarfile.open(tmp_path / f"{basename}.gh.tar.gz", "x:gz") as tarf:
+        tar_info = tarfile.TarInfo(f"{basename}/Cargo.toml")
+        tar_info.size = len(TOP_CARGO_TOML)
+        tarf.addfile(tar_info, io.BytesIO(TOP_CARGO_TOML))
+        tar_info = tarfile.TarInfo(f"{basename}/sub/Cargo.toml")
+        tar_info.size = len(SUB_CARGO_TOML)
+        tarf.addfile(tar_info, io.BytesIO(SUB_CARGO_TOML))
+
+    if expected is RuntimeError:
+        with pytest.raises(RuntimeError):
+            crate.get_package_directory(tmp_path)
+    else:
+        assert (crate.get_package_directory(tmp_path) ==
+                PurePath(basename) / expected)
