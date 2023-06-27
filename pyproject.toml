@@ -9,7 +9,7 @@ license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "license_expression",
     "tomli >= 1.2.3; python_version < '3.11'",
