@@ -1,5 +1,4 @@
 import argparse
-import io
 import logging
 import os.path
 import shutil
@@ -79,11 +78,13 @@ def main(prog_name: str, *argv: str) -> int:
             directory /= ".."
             yield directory
 
-    def get_cargo_lock_file(directory: Path) -> io.BufferedReader:
+    def get_crates_from_cargo_lock(directory: Path,
+                                   ) -> typing.FrozenSet[Crate]:
         err: typing.Optional[Exception] = None
         for directory in iterate_parents(directory):
             try:
-                return open(directory / "Cargo.lock", "rb")
+                with open(directory / "Cargo.lock", "rb") as f:
+                    return frozenset(get_crates(f))
             except FileNotFoundError as e:
                 if err is None:
                     err = e
@@ -119,8 +120,7 @@ def main(prog_name: str, *argv: str) -> int:
     for directory in args.directory:
         with open(directory / "Cargo.toml", "rb") as f:
             pkg_metas.append(get_package_metadata(f))
-        with get_cargo_lock_file(directory) as f:
-            crates.update(get_crates(f))
+        crates.update(get_crates_from_cargo_lock(directory))
     pkg_meta = pkg_metas[0]
 
     if args.no_license:
