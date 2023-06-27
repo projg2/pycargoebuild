@@ -104,9 +104,9 @@ def get_license_from_crate(crate: Crate,
     """
 
     filename = crate.filename
+    base_dir = crate.get_package_directory(distdir)
     with tarfile.open(distdir / filename, "r:gz") as crate_tar:
-        tarf = crate_tar.extractfile(
-            str(crate.get_package_directory(distdir) / "Cargo.toml"))
+        tarf = crate_tar.extractfile(str(base_dir / "Cargo.toml"))
         if tarf is None:
             raise RuntimeError(f"Cargo.toml not found in {filename}")
         with tarf:
@@ -116,13 +116,14 @@ def get_license_from_crate(crate: Crate,
             crate_metadata = get_package_metadata(tarf)  # type: ignore
             if crate_metadata.license_file is not None:
                 logging.warning(
-                    f"Crate {filename} uses license-file="
+                    f"Crate {filename} (in {base_dir}) uses license-file="
                     f"{crate_metadata.license_file!r}, please inspect "
                     "the license manually and add it *separately* from crate "
                     "licenses")
             elif crate_metadata.license is None:
                 raise RuntimeError(
-                    f"Crate {filename} does not specify a license!")
+                    f"Crate {filename} (in {base_dir}) does not specify "
+                    "a license!")
             return crate_metadata.license
 
 
