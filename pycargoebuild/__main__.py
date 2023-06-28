@@ -67,6 +67,36 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Directory containing Cargo.* files (default: .)")
     args = argp.parse_args(argv)
 
+    config_dirs = os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":")
+    config_dirs.insert(0, os.environ.get("XDG_CONFIG_HOME", "~/.config"))
+    for x in config_dirs:
+        config_path = Path(os.path.expanduser(x)) / "pycargoebuild.toml"
+        try:
+            with open(config_path, "rb") as f:
+                config_toml = tomllib.load(f)
+        except (FileNotFoundError, NotADirectoryError):
+            pass
+        except tomllib.TOMLDecodeError as e:
+            raise RuntimeError(
+                f"Error parsing configuration file {config_path}") from e
+        else:
+            logging.info(f"Using configuration file {config_path}")
+            break
+    else:
+        config_toml = {}
+
+    # load defaults from config file
+    config_toml_paths = config_toml.get("paths", {})
+    if args.distdir is None:
+        default_distdir = config_toml_paths.get("distdir")
+        if default_distdir is not None:
+            args.distdir = Path(default_distdir)
+    if args.license_mapping is None:
+        default_license_mapping = config_toml_paths.get("license-mapping")
+        if default_license_mapping is not None:
+            args.license_mapping = open(default_license_mapping, "r",
+                                        encoding="utf-8")
+
     if args.distdir is None or args.license_mapping is None:
         from portage import create_trees
         trees = create_trees()

@@ -69,4 +69,19 @@ It is also possible to explicitly specify the output filename using
 the ``-o`` option.
 
 
+Configuration file
+==================
+pycargoebuild can additionally be configured using
+``pycargoebuild.toml`` in one of the XDG config directories
+(usually ``~/.config``).  The following example provides a quick summary
+of configuration options available::
+
+    [paths]
+    # default --distdir, Portage config is used if not set
+    distdir = "/var/cache/portage/distfiles"
+    # default --license-mapping, "metadata/license-mapping.conf" from
+    # ::gentoo repo (via Portage API) is used if not set
+    license-mapping = "/var/db/repos/gentoo/metadata/license-mapping.conf"
+
+
 .. _cargo-ebuild: https://github.com/gentoo/cargo-ebuild/
