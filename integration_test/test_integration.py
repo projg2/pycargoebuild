@@ -17,7 +17,9 @@ class Package(typing.NamedTuple):
     directories: typing.List[str]
     expected_filename: typing.Optional[str] = None
     crate_license: bool = True
+    has_crates_without_license: bool = False
     uses_license_file: bool = False
+    uses_licenseref: bool = False
     uses_plus_fallback: bool = False
 
 
@@ -69,6 +71,24 @@ PACKAGES = {
         checksum="4dfd246177883c6d1908ff532e384e9a"
                  "e063ceb61236833ad656e2da9953a387",
         directories=["qiskit-terra-0.22.3"]),
+    "ruffle_core-0.1.0.ebuild": Package(
+        url="https://github.com/ruffle-rs/ruffle/archive/"
+            "nightly-2023-06-24.tar.gz",
+        checksum="8a47502bcbccae064d45dedde739b2ab"
+                 "3f6ccf97fb9feb5e3898d6e11302db87",
+        directories=[
+            f"ruffle-nightly-2023-06-24/{x}"
+            for x
+            in ["core", "core/build_playerglobal", "core/macros",
+                "desktop", "exporter", "render", "render/canvas",
+                "render/naga-agal", "render/naga-pixelbender",
+                "render/webgl", "render/wgpu", "scanner", "swf",
+                "tests", "tests/input-format", "video",
+                "video/software", "web", "web/common",
+                "web/packages/extension/safari", "wstr"]
+        ],
+        has_crates_without_license=True,
+        uses_licenseref=True),
     "rustworkx-0.12.1.ebuild": Package(
         url="https://files.pythonhosted.org/packages/17/e6/"
             "924967efd523c0bfed2868b62c334a3339f21fba0ac4b447089731312159/"
@@ -173,12 +193,25 @@ def test_integration(tmp_path, capfd, caplog, ebuild):
     assert normalize_ebuild(expected) == normalize_ebuild(test_dir / ebuild)
 
     records = set(caplog.records)
+    if pkg_info.has_crates_without_license:
+        # we should get a warning about license-file use
+        no_license_warnings = [
+            rec for rec in records
+            if "does not specify a license" in rec.message]
+        assert len(no_license_warnings) > 0
+        records.difference_update(no_license_warnings)
     if pkg_info.uses_license_file:
         # we should get a warning about license-file use
         license_file_warnings = [
             rec for rec in records if "uses license-file" in rec.message]
         assert len(license_file_warnings) > 0
         records.difference_update(license_file_warnings)
+    if pkg_info.uses_licenseref:
+        # we should get a warning about LicenseRef-* use
+        licenseref_warnings = [
+            rec for rec in records if "User defined license" in rec.message]
+        assert len(licenseref_warnings) > 0
+        records.difference_update(licenseref_warnings)
     if pkg_info.uses_plus_fallback:
         # we should get a warning about foo+ fallback to foo
         license_file_warnings = [
