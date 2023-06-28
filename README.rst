@@ -83,5 +83,11 @@ of configuration options available::
     # ::gentoo repo (via Portage API) is used if not set
     license-mapping = "/var/db/repos/gentoo/metadata/license-mapping.conf"
 
+    [license-overrides]
+    # provide an SPDX license string for packages missing the metadata
+    nihav_codec_support = "MIT"
+    nihav_core = "MIT"
+    nihav_duck = "MIT"
+
 
 .. _cargo-ebuild: https://github.com/gentoo/cargo-ebuild/

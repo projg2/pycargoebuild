@@ -121,13 +121,15 @@ def get_license_from_crate(crate: Crate,
                     "licenses")
             elif crate_metadata.license is None:
                 logging.warning(
-                    f"Crate {filename} (in {base_dir}) does not specify "
+                    f"Crate {filename} (in {base_dir}, "
+                    f"name={crate_metadata.name!r}) does not specify "
                     "a license!")
             return crate_metadata.license
 
 
 def get_crate_LICENSE(crates: typing.Iterable[Crate],
                       distdir: Path,
+                      license_overrides: typing.Dict[str, str] = {},
                       ) -> str:
     """
     Get the value of LICENSE string for crates
@@ -135,6 +137,8 @@ def get_crate_LICENSE(crates: typing.Iterable[Crate],
 
     spdx = license_expression.get_spdx_licensing()
     crate_licenses = set(get_license_from_crate(crate, distdir)
+                         if crate.name not in license_overrides
+                         else license_overrides[crate.name]
                          for crate in crates)
     crate_licenses.discard(None)
 
@@ -177,6 +181,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
                distdir: Path,
                *,
                crate_license: bool = True,
+               license_overrides: typing.Dict[str, str] = {},
                ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
@@ -189,7 +194,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
 
     return template.format(
         crates=get_CRATES(crates),
-        crate_licenses=get_crate_LICENSE(crates, distdir),
+        crate_licenses=get_crate_LICENSE(crates, distdir, license_overrides),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
@@ -247,6 +252,7 @@ def update_ebuild(ebuild: str,
                   distdir: Path,
                   *,
                   crate_license: bool = True,
+                  license_overrides: typing.Dict[str, str] = {},
                   ) -> str:
     """
     Update the CRATES, GIT_CRATES and LICENSE in an existing ebuild
@@ -255,7 +261,8 @@ def update_ebuild(ebuild: str,
     crates_repl = CountingSubst(partial(get_CRATES, crates))
     git_crates_repl = GitCratesSubst(partial(get_GIT_CRATES, crates, distdir))
     crate_license_repl = (
-        CountingSubst(partial(get_crate_LICENSE, crates, distdir)))
+        CountingSubst(partial(get_crate_LICENSE, crates, distdir,
+                              license_overrides)))
 
     for regex, repl in ((CRATES_RE, crates_repl),
                         (GIT_CRATES_RE, git_crates_repl),

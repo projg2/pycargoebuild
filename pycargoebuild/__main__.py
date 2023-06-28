@@ -208,19 +208,25 @@ def main(prog_name: str, *argv: str) -> int:
     verify_crates(crates, distdir=args.distdir)
 
     if args.input is not None:
-        ebuild = update_ebuild(args.input.read(),
-                               pkg_meta,
-                               crates,
-                               distdir=args.distdir,
-                               crate_license=not args.no_license)
+        ebuild = update_ebuild(
+            args.input.read(),
+            pkg_meta,
+            crates,
+            distdir=args.distdir,
+            crate_license=not args.no_license,
+            license_overrides=config_toml.get("license-overrides", {}),
+            )
         logging.warning(
             "The in-place mode updates CRATES, GIT_CRATES and crate "
             "LICENSE+= variables only, other metadata is left unchanged")
     else:
-        ebuild = get_ebuild(pkg_meta,
-                            crates,
-                            distdir=args.distdir,
-                            crate_license=not args.no_license)
+        ebuild = get_ebuild(
+            pkg_meta,
+            crates,
+            distdir=args.distdir,
+            crate_license=not args.no_license,
+            license_overrides=config_toml.get("license-overrides", {}),
+            )
 
     try:
         with tempfile.NamedTemporaryFile(mode="w",
