@@ -20,6 +20,11 @@ def load_license_mapping(f: typing.IO["str"]) -> None:
 
 def symbol_to_ebuild(license_symbol: license_expression.LicenseSymbol) -> str:
     full_key = str(license_symbol).lower()
+    if full_key.startswith("licenseref-"):
+        logging.warning(
+            f"User defined license found: {str(license_symbol)!r}, mapping "
+            "not possible.")
+        return ""
     no_plus = full_key.replace("+", "")
     # if we do not have an exact match, check if it is a "+" expression
     # and try a match without the "+" symbol
