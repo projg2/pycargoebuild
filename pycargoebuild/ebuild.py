@@ -82,15 +82,14 @@ def get_GIT_CRATES(crates: typing.Iterable[Crate],
     return ""
 
 
-def get_package_LICENSE(pkg_meta: PackageMetadata) -> str:
+def get_package_LICENSE(license_str: typing.Optional[str]) -> str:
     """
     Get the value of package's LICENSE string
     """
 
     spdx = license_expression.get_spdx_licensing()
-    if pkg_meta.license is not None:
-        parsed_pkg_license = spdx.parse(pkg_meta.license,
-                                        strict=True)
+    if license_str is not None:
+        parsed_pkg_license = spdx.parse(license_str, strict=True)
         return format_license_var(spdx_to_ebuild(parsed_pkg_license),
                                   prefix='LICENSE="')
     return ""
@@ -195,7 +194,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
         opt_git_crates=get_GIT_CRATES(crates, distdir),
-        pkg_license=get_package_LICENSE(pkg_meta),
+        pkg_license=get_package_LICENSE(pkg_meta.license),
         prog_version=__version__,
         year=datetime.date.today().year)
 
