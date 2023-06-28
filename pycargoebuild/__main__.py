@@ -18,7 +18,7 @@ from pycargoebuild.ebuild import get_ebuild, update_ebuild
 from pycargoebuild.fetch import (fetch_crates_using_wget,
                                  fetch_crates_using_aria2,
                                  verify_crates)
-from pycargoebuild.license import load_license_mapping
+from pycargoebuild.license import load_license_mapping, MAPPING
 
 
 FETCHERS = ("aria2", "wget")
@@ -113,6 +113,9 @@ def main(prog_name: str, *argv: str) -> int:
 
     load_license_mapping(args.license_mapping)
     args.license_mapping.close()
+    MAPPING.update(
+        (k.lower(), v) for k, v
+        in config_toml.get("license-mapping", {}).items())
 
     def iterate_parents(directory: Path) -> typing.Generator[Path, None, None]:
         root = directory.absolute().root

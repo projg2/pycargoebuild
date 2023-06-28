@@ -89,5 +89,9 @@ of configuration options available::
     nihav_core = "MIT"
     nihav_duck = "MIT"
 
+    [license-mapping]
+    # additional mappings from SPDX licenses to Gentoo licenses
+    "LicenseRef-UFL-1.0" = "UbuntuFontLicense-1.0"
+
 
 .. _cargo-ebuild: https://github.com/gentoo/cargo-ebuild/
