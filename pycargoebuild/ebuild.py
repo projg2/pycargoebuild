@@ -89,7 +89,7 @@ def get_package_LICENSE(license_str: typing.Optional[str]) -> str:
 
     spdx = license_expression.get_spdx_licensing()
     if license_str is not None:
-        parsed_pkg_license = spdx.parse(license_str, strict=True)
+        parsed_pkg_license = spdx.parse(license_str, strict=True).simplify()
         return format_license_var(spdx_to_ebuild(parsed_pkg_license),
                                   prefix='LICENSE="')
     return ""

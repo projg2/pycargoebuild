@@ -71,7 +71,7 @@ SRC_URI="
 	${CARGO_CRATE_URIS}
 "
 
-LICENSE="|| ( CC0-1.0 Apache-2.0 )"
+LICENSE="|| ( Apache-2.0 CC0-1.0 )"
 # Dependent crate licenses
 LICENSE+="
 	Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD-2 BSD MIT

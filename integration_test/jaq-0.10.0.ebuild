@@ -78,7 +78,7 @@ SRC_URI="
 	${CARGO_CRATE_URIS}
 "
 
-LICENSE="MIT MIT MIT MIT"
+LICENSE="MIT"
 # Dependent crate licenses
 LICENSE+="
 	BSD EPL-2.0 MIT Unicode-DFS-2016
