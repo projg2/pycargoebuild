@@ -60,6 +60,9 @@ def main(prog_name: str, *argv: str) -> int:
     argp.add_argument("-o", "--output",
                       help="Ebuild file to write (default: INPUT if --input "
                            "is specified, {name}-{version}.ebuild otherwise)")
+    argp.add_argument("--no-config",
+                      action="store_true",
+                      help="Inhibit loading configuration files")
     argp.add_argument("directory",
                       type=Path,
                       default=[Path(".")],
@@ -67,23 +70,23 @@ def main(prog_name: str, *argv: str) -> int:
                       help="Directory containing Cargo.* files (default: .)")
     args = argp.parse_args(argv)
 
-    config_dirs = os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":")
-    config_dirs.insert(0, os.environ.get("XDG_CONFIG_HOME", "~/.config"))
-    for x in config_dirs:
-        config_path = Path(os.path.expanduser(x)) / "pycargoebuild.toml"
-        try:
-            with open(config_path, "rb") as f:
-                config_toml = tomllib.load(f)
-        except (FileNotFoundError, NotADirectoryError):
-            pass
-        except tomllib.TOMLDecodeError as e:
-            raise RuntimeError(
-                f"Error parsing configuration file {config_path}") from e
-        else:
-            logging.info(f"Using configuration file {config_path}")
-            break
-    else:
-        config_toml = {}
+    config_toml = {}
+    if not args.no_config:
+        config_dirs = os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":")
+        config_dirs.insert(0, os.environ.get("XDG_CONFIG_HOME", "~/.config"))
+        for x in config_dirs:
+            config_path = Path(os.path.expanduser(x)) / "pycargoebuild.toml"
+            try:
+                with open(config_path, "rb") as f:
+                    config_toml = tomllib.load(f)
+            except (FileNotFoundError, NotADirectoryError):
+                pass
+            except tomllib.TOMLDecodeError as e:
+                raise RuntimeError(
+                    f"Error parsing configuration file {config_path}") from e
+            else:
+                logging.info(f"Using configuration file {config_path}")
+                break
 
     # load defaults from config file
     config_toml_paths = config_toml.get("paths", {})
