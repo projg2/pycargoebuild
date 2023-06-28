@@ -121,7 +121,7 @@ def get_license_from_crate(crate: Crate,
                     "the license manually and add it *separately* from crate "
                     "licenses")
             elif crate_metadata.license is None:
-                raise RuntimeError(
+                logging.warning(
                     f"Crate {filename} (in {base_dir}) does not specify "
                     "a license!")
             return crate_metadata.license
