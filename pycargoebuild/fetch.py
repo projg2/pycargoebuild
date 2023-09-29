@@ -17,8 +17,9 @@ def fetch_crates_using_aria2(crates: typing.Iterable[Crate], *, distdir: Path
 
     distdir.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile("w+") as file_list_f:
-        for crate in crates:
-            if not (distdir / crate.filename).exists():
+        by_filename = {crate.filename: crate for crate in crates}
+        for filename, crate in by_filename.items():
+            if not (distdir / filename).exists():
                 file_list_f.write(
                     f"{crate.download_url}\n\tout={crate.filename}\n")
 
