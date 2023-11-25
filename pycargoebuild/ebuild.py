@@ -104,15 +104,18 @@ def get_license_from_crate(crate: Crate,
 
     filename = crate.filename
     base_dir = crate.get_package_directory(distdir)
+    workspace_toml = crate.get_workspace_toml(distdir)
     with tarfile.open(distdir / filename, "r:gz") as crate_tar:
         tarf = crate_tar.extractfile(str(base_dir / "Cargo.toml"))
         if tarf is None:
-            raise RuntimeError(f"Cargo.toml not found in {filename}")
+            raise RuntimeError(
+                f"{base_dir}/Cargo.toml not found in {filename}")
         with tarf:
             # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
             # expects BinaryIO -- but it actually is compatible
             # https://github.com/hukkin/tomli/issues/214
-            crate_metadata = get_package_metadata(tarf)  # type: ignore
+            crate_metadata = get_package_metadata(
+                tarf, workspace_toml)  # type: ignore
             if crate_metadata.license_file is not None:
                 logging.warning(
                     f"Crate {filename} (in {base_dir}) uses license-file="

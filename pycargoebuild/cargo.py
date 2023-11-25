@@ -25,6 +25,9 @@ class Crate:
     def filename(self) -> str:
         return f"{self.name}-{self.version}.crate"
 
+    def get_workspace_toml(self, distdir: Path) -> dict:
+        return {}
+
     def get_package_directory(self, distdir: Path) -> PurePath:
         return PurePath(f"{self.name}-{self.version}")
 
@@ -64,7 +67,26 @@ class GitCrate(Crate):
         return f"{self.repository.rpartition('/')[2]}-{self.commit}.gh.tar.gz"
 
     @functools.cache
+    def get_workspace_toml(self, distdir: Path) -> dict:
+        filename = self.filename
+        root_dir = self.get_root_directory(distdir)
+        if root_dir is None:
+            return {}
+        with tarfile.open(distdir / filename, "r:gz") as crate_tar:
+            tarf = crate_tar.extractfile(str(root_dir / "Cargo.toml"))
+            if tarf is None:
+                raise RuntimeError(
+                    f"{root_dir}/Cargo.toml not found in {filename}")
+            with tarf:
+                # tarfile.ExFileObject() is IO[bytes] while tomli/tomllib
+                # expects BinaryIO -- but it actually is compatible
+                # https://github.com/hukkin/tomli/issues/214
+                return (tomllib.load(tarf).get("workspace", {})  # type: ignore
+                                          .get("package", {}))
+
+    @functools.cache
     def get_package_directory(self, distdir: Path) -> PurePath:
+        workspace_toml = self.get_workspace_toml(distdir)
         # TODO: perhaps it'd be more correct to follow workspaces
         with tarfile.open(distdir / self.filename, "r:gz") as crate_tar:
             while (tar_info := crate_tar.next()) is not None:
@@ -78,7 +100,8 @@ class GitCrate(Crate):
                     # expects BinaryIO -- but it actually is compatible
                     # https://github.com/hukkin/tomli/issues/214
                     try:
-                        metadata = get_package_metadata(f)  # type: ignore
+                        metadata = get_package_metadata(
+                            f, workspace_toml)  # type: ignore
                     except WorkspaceCargoTomlError:
                         continue
                     if (metadata.name == self.name and

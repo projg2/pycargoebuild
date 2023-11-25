@@ -25,12 +25,23 @@ def pkg_meta() -> PackageMetadata:
                            homepage="https://example.com")
 
 
-def make_crate(path: Path, cargo_toml: bytes) -> None:
+def make_crate(path: Path,
+               cargo_toml: bytes,
+               sub_toml: typing.Optional[bytes] = None,
+               ) -> None:
     basename = path.name.removesuffix(".crate").removesuffix(".gh.tar.gz")
     with tarfile.open(path, "x:gz") as tarf:
+        tar_info = tarfile.TarInfo(f"{basename}/Cargo.lock")
+        tarf.addfile(tar_info, io.BytesIO(b""))
+
         tar_info = tarfile.TarInfo(f"{basename}/Cargo.toml")
         tar_info.size = len(cargo_toml)
         tarf.addfile(tar_info, io.BytesIO(cargo_toml))
+
+        if sub_toml is not None:
+            tar_info = tarfile.TarInfo(f"{basename}/sub/Cargo.toml")
+            tar_info.size = len(sub_toml)
+            tarf.addfile(tar_info, io.BytesIO(sub_toml))
 
 
 @pytest.fixture(scope="session")
@@ -56,10 +67,16 @@ def crate_dir(tmp_path_factory) -> typing.Generator[Path, None, None]:
     """)
     make_crate(tmp_path / ("pycargoebuild-5ace474ad2e92da836de"
                            "60afd9014cbae7bdd481.gh.tar.gz"), b"""
+        [workspace]
+        default-members = ["sub"]
+        members = ["sub"]
+        package.version = "0.1"
+        package.license = "MIT"
+    """, sub_toml=b"""
         [package]
         name = "test"
-        version = "0.1"
-        license = "MIT"
+        version.workspace = true
+        license.workspace = true
     """)
     yield tmp_path
 
@@ -228,7 +245,7 @@ def test_get_ebuild_git_crates(real_license_mapping, pkg_meta, crate_dir,
         "
 
         declare -A GIT_CRATES=(
-        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%/sub'
         )
 
         inherit cargo
@@ -395,7 +412,7 @@ def test_update_git_crates(real_license_mapping, pkg_meta, crate_dir,
 
         declare -A GIT_CRATES=(
         \t[else]='total-junk-here'
-        \t[something]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        \t[something]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%/sub'
         )
 
         inherit cargo
@@ -419,7 +436,7 @@ def test_update_git_crates(real_license_mapping, pkg_meta, crate_dir,
         "
 
         declare -A GIT_CRATES=(
-        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%/sub'
         )
 
         inherit cargo
@@ -446,7 +463,7 @@ def test_update_remove_git_crates(real_license_mapping, pkg_meta, crate_dir,
 
         declare -A GIT_CRATES=(
         \t[else]='total-junk-here'
-        \t[something]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        \t[something]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%/sub'
         )
 
         inherit cargo
@@ -513,7 +530,7 @@ def test_update_add_git_crates(real_license_mapping, pkg_meta, crate_dir,
         "
 
         declare -A GIT_CRATES=(
-        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%'
+        \t[test]='https://github.com/projg2/pycargoebuild;5ace474ad2e92da836de60afd9014cbae7bdd481;pycargoebuild-%commit%/sub'
         )
 
         inherit cargo
