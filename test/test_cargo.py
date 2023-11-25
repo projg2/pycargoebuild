@@ -184,3 +184,28 @@ def test_git_crate_package_directory(tmp_path, name, expected):
     else:
         assert (crate.get_package_directory(tmp_path) ==
                 PurePath(basename) / expected)
+
+
+@pytest.mark.parametrize("have_it", [False, True])
+def test_git_crate_root_directory(tmp_path, have_it):
+    commit = "5ace474ad2e92da836de60afd9014cbae7bdd481"
+    crate = GitCrate("pycargoebuild", "0.1",
+                     "https://github.com/projg2/pycargoebuild",
+                     commit)
+    basename = f"pycargoebuild-{commit}"
+
+    with tarfile.open(tmp_path / f"{basename}.gh.tar.gz", "x:gz") as tarf:
+        tar_info = tarfile.TarInfo(f"{basename}/Cargo.toml")
+        tar_info.size = len(TOP_CARGO_TOML)
+        tarf.addfile(tar_info, io.BytesIO(TOP_CARGO_TOML))
+        tar_info = tarfile.TarInfo(f"{basename}/sub/Cargo.toml")
+        tar_info.size = len(SUB_CARGO_TOML)
+        tarf.addfile(tar_info, io.BytesIO(SUB_CARGO_TOML))
+        if have_it:
+            tar_info = tarfile.TarInfo(f"{basename}/Cargo.lock")
+            tarf.addfile(tar_info, io.BytesIO(b""))
+
+    if have_it:
+        assert crate.get_root_directory(tmp_path) == PurePath(basename)
+    else:
+        assert crate.get_root_directory(tmp_path) is None

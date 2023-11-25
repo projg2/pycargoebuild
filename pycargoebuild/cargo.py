@@ -28,6 +28,9 @@ class Crate:
     def get_package_directory(self, distdir: Path) -> PurePath:
         return PurePath(f"{self.name}-{self.version}")
 
+    def get_root_directory(self, distdir: Path) -> typing.Optional[PurePath]:
+        return self.get_package_directory(distdir)
+
     @property
     def download_url(self) -> str:
         raise NotImplementedError()
@@ -89,6 +92,16 @@ class GitCrate(Crate):
         subdir = (str(self.get_package_directory(distdir))
                   .replace(self.commit, "%commit%"))
         return f"{self.repository};{self.commit};{subdir}"
+
+    @functools.cache
+    def get_root_directory(self, distdir: Path) -> typing.Optional[PurePath]:
+        """Get the directory containing Cargo.lock"""
+        with tarfile.open(distdir / self.filename, "r:gz") as crate_tar:
+            while (tar_info := crate_tar.next()) is not None:
+                path = PurePath(tar_info.name)
+                if path.name == "Cargo.lock":
+                    return path.parent
+        return None
 
 
 class PackageMetadata(typing.NamedTuple):
