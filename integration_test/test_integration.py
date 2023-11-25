@@ -46,6 +46,14 @@ PACKAGES = {
                  "f734735b49ee45b11324d85efc4d5cbd",
         directories=["cryptography-38.0.3/src/rust"],
         expected_filename="cryptography-rust-0.1.0.ebuild"),
+    "fractal-5.0.0.ebuild": Package(
+        url="https://gitlab.gnome.org/GNOME/fractal/-/archive/5/"
+            "fractal-5.tar.gz",
+        checksum="649fbf06810fb3636098cf576773daa3"
+                 "065879794bb1e1984c6cd1bd2509d045",
+        directories=["fractal-5"],
+        uses_license_file=True,
+        uses_plus_fallback=True),
     "lemmy_server-0.18.0.ebuild": Package(
         url="https://github.com/LemmyNet/lemmy/archive/0.18.0.tar.gz",
         checksum="dff7ce501cade3aed2427268d48a27ea"
