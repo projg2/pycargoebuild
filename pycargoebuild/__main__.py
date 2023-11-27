@@ -1,19 +1,28 @@
 import argparse
+import datetime
+import io
+import json
 import logging
+import lzma
 import os.path
 import shutil
 import sys
+import tarfile
 import tempfile
 import typing
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 if sys.version_info >= (3, 11):
     import tomllib
 else:
     import tomli as tomllib
 
-from pycargoebuild.cargo import Crate, get_crates, get_package_metadata
+from pycargoebuild.cargo import (Crate,
+                                 FileCrate,
+                                 get_crates,
+                                 get_package_metadata,
+                                 )
 from pycargoebuild.ebuild import get_ebuild, update_ebuild
 from pycargoebuild.fetch import (fetch_crates_using_wget,
                                  fetch_crates_using_aria2,
@@ -31,6 +40,18 @@ class WorkspaceData(typing.NamedTuple):
 
 def main(prog_name: str, *argv: str) -> int:
     argp = argparse.ArgumentParser(prog=os.path.basename(prog_name))
+    argp.add_argument("-c", "--crate-tarball",
+                      action="store_true",
+                      help="Pack fetched crates into a tarball rather than "
+                           "adding them to the CRATES variable")
+    argp.add_argument("--crate-tarball-path",
+                      default="{distdir}/{name}-{version}-crates.tar.xz",
+                      help="Path to write crate tarball to (default: "
+                           "{distdir}/{name}-{version}-crates.tar.xz)")
+    argp.add_argument("--crate-tarball-prefix",
+                      default="cargo_home/gentoo",
+                      help="Prefix prepended for all paths in the crate "
+                           "tarball (default: cargo_home/gentoo)")
     argp.add_argument("-d", "--distdir",
                       type=Path,
                       help="Directory to store downloaded crates in "
@@ -171,6 +192,45 @@ def main(prog_name: str, *argv: str) -> int:
                     f"{', '.join(FETCHERS)})")
             assert False, f"Unexpected args.fetcher={args.fetcher}"
 
+    def repack_crates(tar_out: tarfile.TarFile,
+                      crates: typing.Set[Crate],
+                      ) -> None:
+        prefix = args.crate_tarball_prefix
+        interval = datetime.timedelta(seconds=10)
+        next_ping = datetime.datetime.now() + interval
+        for crate_no, crate in enumerate(sorted(crates,
+                                                key=lambda x: x.filename)):
+            if datetime.datetime.now() > next_ping:
+                logging.info(
+                    f"Processed {crate_no} out of {len(crates)} crates")
+                next_ping = datetime.datetime.now() + interval
+            if isinstance(crate, FileCrate):
+                with tarfile.open(args.distdir / crate.filename,
+                                  "r:gz") as tar_in:
+                    crate_dir = crate.get_package_directory(args.distdir)
+                    for tar_info in tar_in:
+                        orig_name = PurePosixPath(tar_info.path)
+                        assert orig_name.is_relative_to(crate_dir)
+                        member_file = tar_in.extractfile(tar_info)
+                        assert member_file is not None
+                        with member_file:
+                            new_tar_info = tar_info.replace(
+                                name=f"{prefix}/{orig_name}")
+                            tar_out.addfile(new_tar_info, member_file)
+
+                    checksum_data = json.dumps(
+                        {
+                            "package": crate.checksum,
+                            "files": {},
+                        })
+                    checksum_info = tarfile.TarInfo()
+                    checksum_info.name = (
+                        f"{prefix}/{crate_dir}/.cargo-checksum.json")
+                    checksum_info.size = len(checksum_data)
+                    checksum_info.mode = 0o644
+                    tar_out.addfile(checksum_info,
+                                    io.BytesIO(checksum_data.encode()))
+
     crates: typing.Set[Crate] = set()
     pkg_metas = []
     for directory in args.directory:
@@ -211,6 +271,36 @@ def main(prog_name: str, *argv: str) -> int:
 
     fetch_crates(crates)
     verify_crates(crates, distdir=args.distdir)
+
+    if args.crate_tarball:
+        crate_tarball = Path(
+            args.crate_tarball_path.format(name=pkg_meta.name,
+                                           version=pkg_meta.version,
+                                           distdir=args.distdir))
+        if not args.force and crate_tarball.exists():
+            logging.error(f"{crate_tarball} exists already, pass -f to "
+                          "overwrite it")
+            return 1
+        with tempfile.NamedTemporaryFile(mode="wb",
+                                         dir=args.distdir,
+                                         delete=False
+                                         ) as cratef:
+            try:
+                # typing: https://github.com/python/typeshed/issues/11072
+                with tarfile.open(fileobj=cratef,
+                                  mode="w:xz",
+                                  format=tarfile.GNU_FORMAT,
+                                  encoding="UTF-8",
+                                  preset=9 | lzma.PRESET_EXTREME,
+                                  ) as tar_out:  # type: ignore
+                    logging.info("Repacking crates ...")
+                    repack_crates(tar_out, crates)
+            except BaseException:
+                Path(cratef.name).unlink()
+                raise
+        Path(cratef.name).rename(crate_tarball)
+        logging.info(f"Crate tarball written to {crate_tarball}")
+        crates = set(filter(lambda x: not isinstance(x, FileCrate), crates))
 
     if args.input is not None:
         ebuild = update_ebuild(
