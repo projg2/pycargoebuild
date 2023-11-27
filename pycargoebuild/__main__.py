@@ -206,8 +206,7 @@ def main(prog_name: str, *argv: str) -> int:
         outfile = Path(args.output.format(name=pkg_meta.name,
                                           version=pkg_meta.version))
         if not args.force and outfile.exists():
-            print(f"{outfile} exists already, pass -f to overwrite it",
-                  file=sys.stderr)
+            logging.error(f"{outfile} exists already, pass -f to overwrite it")
             return 1
 
     fetch_crates(crates)
