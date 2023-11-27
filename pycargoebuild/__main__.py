@@ -249,7 +249,7 @@ def main(prog_name: str, *argv: str) -> int:
                 os.umask(umask)
                 os.fchmod(outf.fileno(), 0o666 & ~umask)
             outf.write(ebuild)
-        except Exception:
+        except BaseException:
             Path(outf.name).unlink()
             raise
     Path(outf.name).rename(outfile)
