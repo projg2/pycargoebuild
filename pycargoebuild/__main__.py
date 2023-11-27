@@ -234,11 +234,11 @@ def main(prog_name: str, *argv: str) -> int:
             license_overrides=config_toml.get("license-overrides", {}),
             )
 
-    try:
-        with tempfile.NamedTemporaryFile(mode="w",
-                                         encoding="utf-8",
-                                         dir=outfile.parent,
-                                         delete=False) as outf:
+    with tempfile.NamedTemporaryFile(mode="w",
+                                     encoding="utf-8",
+                                     dir=outfile.parent,
+                                     delete=False) as outf:
+        try:
             if args.input is not None:
                 # typeshed is missing fd support in shutil.copymode()
                 # https://github.com/python/typeshed/issues/9288
@@ -250,9 +250,9 @@ def main(prog_name: str, *argv: str) -> int:
                 os.umask(umask)
                 os.fchmod(outf.fileno(), 0o666 & ~umask)
             outf.write(ebuild)
-    except Exception:
-        Path(outf.name).unlink()
-        raise
+        except Exception:
+            Path(outf.name).unlink()
+            raise
     Path(outf.name).rename(outfile)
 
     print(f"{outfile}")
