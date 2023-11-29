@@ -59,7 +59,8 @@ def get_CRATES(crates: typing.Iterable[Crate]) -> str:
     Return the value of CRATES for the given crate list
     """
     if not crates:
-        return ""
+        # cargo.eclass rejects empty crates, we need some whitespace
+        return "\n"
     return ("\n" +
             "\n".join(sorted(f"\t{c.crate_entry}"
                              for c in crates

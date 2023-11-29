@@ -178,7 +178,8 @@ def test_get_ebuild_no_crates(real_license_mapping, pkg_meta):
 
         EAPI=8
 
-        CRATES=""
+        CRATES="
+        "
 
         inherit cargo
 
