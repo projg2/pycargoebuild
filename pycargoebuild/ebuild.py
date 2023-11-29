@@ -37,7 +37,7 @@ inherit cargo
 DESCRIPTION="{description}"
 HOMEPAGE="{homepage}"
 SRC_URI="
-\t${{CARGO_CRATE_URIS}}
+\t${{CARGO_CRATE_URIS}}{opt_crate_tarball}
 "
 
 LICENSE="{pkg_license}"
@@ -186,7 +186,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
                distdir: Path,
                *,
                crate_license: bool = True,
-               crate_tarball: bool = False,
+               crate_tarball: typing.Optional[Path] = None,
                license_overrides: typing.Dict[str, str] = {},
                ) -> str:
     """
@@ -199,11 +199,13 @@ def get_ebuild(pkg_meta: PackageMetadata,
     template += EBUILD_TEMPLATE_END
 
     return template.format(
-        crates=get_CRATES(crates if not crate_tarball else ()),
+        crates=get_CRATES(crates if crate_tarball is None else ()),
         crate_licenses=get_crate_LICENSE(crates, distdir, license_overrides),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
+        opt_crate_tarball=f"\n\t{crate_tarball.name}"
+                          if crate_tarball is not None else "",
         opt_git_crates=get_GIT_CRATES(crates, distdir),
         pkg_license=get_package_LICENSE(pkg_meta.license),
         prog_version=__version__,
@@ -258,7 +260,7 @@ def update_ebuild(ebuild: str,
                   distdir: Path,
                   *,
                   crate_license: bool = True,
-                  crate_tarball: bool = False,
+                  crate_tarball: typing.Optional[Path] = None,
                   license_overrides: typing.Dict[str, str] = {},
                   ) -> str:
     """
@@ -266,7 +268,7 @@ def update_ebuild(ebuild: str,
     """
 
     crates_repl = CountingSubst(
-        partial(get_CRATES, crates if not crate_tarball else ()))
+        partial(get_CRATES, crates if crate_tarball is None else ()))
     git_crates_repl = GitCratesSubst(partial(get_GIT_CRATES, crates, distdir))
     crate_license_repl = (
         CountingSubst(partial(get_crate_LICENSE, crates, distdir,

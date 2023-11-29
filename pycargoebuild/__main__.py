@@ -308,7 +308,7 @@ def main(prog_name: str, *argv: str) -> int:
             crates,
             distdir=args.distdir,
             crate_license=not args.no_license,
-            crate_tarball=args.crate_tarball,
+            crate_tarball=crate_tarball if args.crate_tarball else None,
             license_overrides=config_toml.get("license-overrides", {}),
             )
         logging.warning(
@@ -320,7 +320,7 @@ def main(prog_name: str, *argv: str) -> int:
             crates,
             distdir=args.distdir,
             crate_license=not args.no_license,
-            crate_tarball=args.crate_tarball,
+            crate_tarball=crate_tarball if args.crate_tarball else None,
             license_overrides=config_toml.get("license-overrides", {}),
             )
 

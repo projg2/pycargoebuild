@@ -231,7 +231,8 @@ def test_get_ebuild_no_crate_license(real_license_mapping, pkg_meta, crate_dir,
 def test_get_ebuild_crate_tarball(real_license_mapping, pkg_meta, crate_dir,
                                   crates):
     assert get_ebuild(pkg_meta, crates, crate_dir,
-                      crate_tarball=True) == textwrap.dedent(f"""\
+                      crate_tarball=Path("test-0-crates.tar.xz"),
+                      ) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
         # Distributed under the terms of the GNU General Public License v2
 
@@ -248,6 +249,7 @@ def test_get_ebuild_crate_tarball(real_license_mapping, pkg_meta, crate_dir,
         HOMEPAGE="https://example.com"
         SRC_URI="
         \t${{CARGO_CRATE_URIS}}
+        \ttest-0-crates.tar.xz
         "
 
         LICENSE="|| ( Apache-2.0 MIT )"
@@ -412,7 +414,8 @@ def test_update_ebuild_crate_tarball(real_license_mapping, pkg_meta, crate_dir,
     """)
 
     assert update_ebuild(old_ebuild, pkg_meta, crates, crate_dir,
-                         crate_tarball=True) == textwrap.dedent("""\
+                         crate_tarball=Path("test-0-crates.tar.xz"),
+                         ) == textwrap.dedent("""\
         EAPI=8
 
         CRATES="
