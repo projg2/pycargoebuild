@@ -54,7 +54,8 @@ KEYWORDS="~amd64"
 """
 
 
-def get_CRATES(crates: typing.Iterable[Crate]) -> str:
+def get_CRATES(crates: typing.Iterable[Crate],
+               ) -> str:
     """
     Return the value of CRATES for the given crate list
     """
@@ -185,6 +186,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
                distdir: Path,
                *,
                crate_license: bool = True,
+               crate_tarball: bool = False,
                license_overrides: typing.Dict[str, str] = {},
                ) -> str:
     """
@@ -197,7 +199,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
     template += EBUILD_TEMPLATE_END
 
     return template.format(
-        crates=get_CRATES(crates),
+        crates=get_CRATES(crates if not crate_tarball else ()),
         crate_licenses=get_crate_LICENSE(crates, distdir, license_overrides),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
@@ -256,13 +258,15 @@ def update_ebuild(ebuild: str,
                   distdir: Path,
                   *,
                   crate_license: bool = True,
+                  crate_tarball: bool = False,
                   license_overrides: typing.Dict[str, str] = {},
                   ) -> str:
     """
     Update the CRATES, GIT_CRATES and LICENSE in an existing ebuild
     """
 
-    crates_repl = CountingSubst(partial(get_CRATES, crates))
+    crates_repl = CountingSubst(
+        partial(get_CRATES, crates if not crate_tarball else ()))
     git_crates_repl = GitCratesSubst(partial(get_GIT_CRATES, crates, distdir))
     crate_license_repl = (
         CountingSubst(partial(get_crate_LICENSE, crates, distdir,

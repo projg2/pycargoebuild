@@ -300,7 +300,6 @@ def main(prog_name: str, *argv: str) -> int:
                 raise
         Path(cratef.name).rename(crate_tarball)
         logging.info(f"Crate tarball written to {crate_tarball}")
-        crates = set(filter(lambda x: not isinstance(x, FileCrate), crates))
 
     if args.input is not None:
         ebuild = update_ebuild(
@@ -309,6 +308,7 @@ def main(prog_name: str, *argv: str) -> int:
             crates,
             distdir=args.distdir,
             crate_license=not args.no_license,
+            crate_tarball=args.crate_tarball,
             license_overrides=config_toml.get("license-overrides", {}),
             )
         logging.warning(
@@ -320,6 +320,7 @@ def main(prog_name: str, *argv: str) -> int:
             crates,
             distdir=args.distdir,
             crate_license=not args.no_license,
+            crate_tarball=args.crate_tarball,
             license_overrides=config_toml.get("license-overrides", {}),
             )
 
