@@ -249,8 +249,12 @@ def test_get_ebuild_crate_tarball(real_license_mapping, pkg_meta, crate_dir,
         HOMEPAGE="https://example.com"
         SRC_URI="
         \t${{CARGO_CRATE_URIS}}
-        \ttest-0-crates.tar.xz
         "
+        if [[ ${{PKGBUMPING}} != ${{PVR}} ]]; then
+        \tSRC_URI+="
+        \t\ttest-0-crates.tar.xz
+        \t"
+        fi
 
         LICENSE="|| ( Apache-2.0 MIT )"
         # Dependent crate licenses

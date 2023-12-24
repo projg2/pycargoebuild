@@ -37,10 +37,18 @@ inherit cargo
 DESCRIPTION="{description}"
 HOMEPAGE="{homepage}"
 SRC_URI="
-\t${{CARGO_CRATE_URIS}}{opt_crate_tarball}
-"
+\t${{CARGO_CRATE_URIS}}
+"{opt_crate_tarball}
 
 LICENSE="{pkg_license}"
+"""
+
+EBUILD_TEMPLATE_CRATE_TARBALL = """
+if [[ ${{PKGBUMPING}} != ${{PVR}} ]]; then
+\tSRC_URI+="
+\t\t{}
+\t"
+fi\
 """
 
 EBUILD_TEMPLATE_CRATE_LICENSE = """\
@@ -204,8 +212,8 @@ def get_ebuild(pkg_meta: PackageMetadata,
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
-        opt_crate_tarball=f"\n\t{crate_tarball.name}"
-                          if crate_tarball is not None else "",
+        opt_crate_tarball=EBUILD_TEMPLATE_CRATE_TARBALL.format(
+            crate_tarball.name) if crate_tarball is not None else "",
         opt_git_crates=get_GIT_CRATES(crates, distdir),
         pkg_license=get_package_LICENSE(pkg_meta.license),
         prog_version=__version__,
