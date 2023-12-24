@@ -310,6 +310,10 @@ def main(prog_name: str, *argv: str) -> int:
         Path(cratef.name).rename(crate_tarball)
         logging.info(f"Crate tarball written to {crate_tarball}")
 
+        # do not regenerate Manifest, crate tarball needs to be uploaded
+        # first
+        args.no_manifest = True
+
     if args.input is not None:
         ebuild = update_ebuild(
             args.input.read(),
