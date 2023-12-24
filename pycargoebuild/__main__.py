@@ -272,6 +272,9 @@ def main(prog_name: str, *argv: str) -> int:
     fetch_crates(crates)
     verify_crates(crates, distdir=args.distdir)
 
+    umask = os.umask(0)
+    os.umask(umask)
+
     if args.crate_tarball:
         crate_tarball = Path(
             args.crate_tarball_path.format(name=pkg_meta.name,
@@ -293,6 +296,7 @@ def main(prog_name: str, *argv: str) -> int:
                                   encoding="UTF-8",
                                   preset=9 | lzma.PRESET_EXTREME,
                                   ) as tar_out:  # type: ignore
+                    os.fchmod(cratef.fileno(), 0o666 & ~umask)
                     logging.info("Repacking crates ...")
                     repack_crates(tar_out, crates)
             except BaseException:
@@ -336,8 +340,6 @@ def main(prog_name: str, *argv: str) -> int:
                                 outf.fileno())  # type: ignore
                 args.input.close()
             else:
-                umask = os.umask(0)
-                os.umask(umask)
                 os.fchmod(outf.fileno(), 0o666 & ~umask)
             outf.write(ebuild)
         except BaseException:
