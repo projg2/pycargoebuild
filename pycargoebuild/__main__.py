@@ -6,6 +6,7 @@ import logging
 import lzma
 import os.path
 import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -78,6 +79,10 @@ def main(prog_name: str, *argv: str) -> int:
                       action="store_true",
                       help="Do not include LICENSEs (e.g. when crates are "
                            "only used at build time")
+    argp.add_argument("-M", "--no-manifest",
+                      action="store_true",
+                      help="Do not call `pkgdev manifest` (called only if "
+                           "Manifest exists)")
     argp.add_argument("-o", "--output",
                       help="Ebuild file to write (default: INPUT if --input "
                            "is specified, {name}-{version}.ebuild otherwise)")
@@ -346,6 +351,12 @@ def main(prog_name: str, *argv: str) -> int:
             Path(outf.name).unlink()
             raise
     Path(outf.name).rename(outfile)
+
+    if not args.no_manifest and (outfile.parent / "Manifest").exists():
+        try:
+            subprocess.call(["pkgdev", "manifest"], cwd=outfile.parent)
+        except FileNotFoundError:
+            logging.warning("pkgdev not found, Manifest will not be updated")
 
     print(f"{outfile}")
     return 0
