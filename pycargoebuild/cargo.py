@@ -128,7 +128,7 @@ class GitCrate(Crate):
                     tarf = crate_tar.extractfile(tar_info)
                     assert tarf is not None
                     with tarf:
-                        if "workspace" in tomllib.load(tarf):
+                        if "workspace" in tomllib.load(tarf):  # type: ignore
                             return path.parent
         return None
 
