@@ -124,6 +124,10 @@ class GitCrate(Crate):
                 path = PurePath(tar_info.name)
                 if path.name == "Cargo.lock":
                     return path.parent
+                if path.name == "Cargo.toml":
+                    with crate_tar.extractfile(tar_info) as tarf:
+                        if "workspace" in tomllib.load(tarf):
+                            return path.parent
         return None
 
 
