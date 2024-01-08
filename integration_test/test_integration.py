@@ -24,6 +24,12 @@ class Package(typing.NamedTuple):
 
 
 PACKAGES = {
+    "attest-0.1.0.ebuild": Package(
+        url="https://github.com/signalapp/libsignal/archive/v0.38.0.tar.gz",
+        checksum="2e31240d41fc31105b3ee9d8c2e0492e"
+                 "d0b93bbe62c1003c13fc9de463da60f6",
+        directories=["libsignal-0.38.0/rust/attest"],
+        uses_license_file=True),
     "bindgen-0.63.0.ebuild": Package(
         url="https://github.com/rust-lang/rust-bindgen/archive/"
             "refs/tags/v0.63.0.tar.gz",
