@@ -152,10 +152,10 @@ def get_crate_LICENSE(crates: typing.Iterable[Crate],
     """
 
     spdx = license_expression.get_spdx_licensing()
-    crate_licenses = set(get_license_from_crate(crate, distdir)
-                         if crate.name not in license_overrides
-                         else license_overrides[crate.name]
-                         for crate in crates)
+    crate_licenses = {get_license_from_crate(crate, distdir)
+                      if crate.name not in license_overrides
+                      else license_overrides[crate.name]
+                      for crate in crates}
     crate_licenses.discard(None)
 
     # combine crate licenses and simplify the result
