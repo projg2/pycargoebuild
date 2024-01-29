@@ -131,13 +131,13 @@ def get_license_from_crate(crate: Crate,
                 tarf, workspace_toml)  # type: ignore
             if crate_metadata.license_file is not None:
                 logging.warning(
-                    f"Crate {filename} (in {base_dir}) uses license-file="
-                    f"{crate_metadata.license_file!r}, please inspect "
-                    "the license manually and add it *separately* from crate "
-                    "licenses")
+                    f"Crate {filename!r} (in {str(base_dir)!r}) uses "
+                    f"license-file={crate_metadata.license_file!r}, please "
+                    "inspect the license manually and add it *separately* "
+                    "from crate licenses")
             elif crate_metadata.license is None:
                 logging.warning(
-                    f"Crate {filename} (in {base_dir}, "
+                    f"Crate {filename!r} (in {str(base_dir)!r}, "
                     f"name={crate_metadata.name!r}) does not specify "
                     "a license!")
             return crate_metadata.license
