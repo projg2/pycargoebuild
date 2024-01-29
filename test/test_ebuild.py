@@ -7,6 +7,7 @@ import io
 import tarfile
 import textwrap
 import typing
+import unittest.mock
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,7 @@ from pycargoebuild.ebuild import (
     update_ebuild,
     url_dquote_escape,
 )
+from pycargoebuild.license import MAPPING, UnmatchedLicense
 
 
 @pytest.fixture(scope="session")
@@ -653,3 +655,27 @@ def test_url_dquote_escape():
     assert (url_dquote_escape(
                 'https://example.com/\u00A0`tricky "${whitespace}"') ==
             "https://example.com/%C2%A0%60tricky+%22%24{whitespace}%22")
+
+
+def test_unmatched_license(real_license_mapping, pkg_meta, crates, crate_dir):
+    stripped_mapping = dict(MAPPING)
+    del stripped_mapping["apache-2.0"]
+
+    with unittest.mock.patch("pycargoebuild.license.MAPPING",
+                             new=stripped_mapping):
+        with pytest.raises(UnmatchedLicense) as e:
+            get_ebuild(pkg_meta, crates, crate_dir)
+        assert (e.value.license_key, e.value.crate) == ("Apache-2.0", None)
+
+
+def test_unmatched_crate_license(real_license_mapping, pkg_meta, crates,
+                                 crate_dir):
+    stripped_mapping = dict(MAPPING)
+    del stripped_mapping["cc0-1.0"]
+
+    with unittest.mock.patch("pycargoebuild.license.MAPPING",
+                             new=stripped_mapping):
+        with pytest.raises(UnmatchedLicense) as e:
+            get_ebuild(pkg_meta, crates, crate_dir)
+        assert (e.value.license_key, e.value.crate
+                ) == ("CC0-1.0", "bar-2.crate")
