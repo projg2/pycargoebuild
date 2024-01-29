@@ -5,8 +5,10 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "pycargoebuild"
 authors = [{name = "Michał Górny", email = "mgorny@gentoo.org"}]
-license = {file = "LICENSE"}
-classifiers = ["License :: OSI Approved :: MIT License"]
+license = {text = "GPL-2.0-or-later"}
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+]
 dynamic = ["version", "description"]
 readme = "README.rst"
 requires-python = ">=3.9"

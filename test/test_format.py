@@ -1,3 +1,7 @@
+# pycargoebuild
+# (c) 2022-2024 Michał Górny <mgorny@gentoo.org>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 import pytest
 
 from pycargoebuild.format import format_license_var
