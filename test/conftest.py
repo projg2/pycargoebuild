@@ -8,7 +8,6 @@ import pytest
 
 from pycargoebuild.license import load_license_mapping
 
-
 TEST_LICENSE_MAPPING_CONF = """
 [spdx-to-ebuild]
 Apache-2.0 = Apache-2.0

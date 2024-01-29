@@ -5,19 +5,18 @@
 import io
 import tarfile
 import typing
-
 from pathlib import PurePath
 
 import pytest
 
-from pycargoebuild.cargo import (FileCrate,
-                                 GitCrate,
-                                 cargo_to_spdx,
-                                 get_crates,
-                                 get_package_metadata,
-                                 PackageMetadata,
-                                 )
-
+from pycargoebuild.cargo import (
+    FileCrate,
+    GitCrate,
+    PackageMetadata,
+    cargo_to_spdx,
+    get_crates,
+    get_package_metadata,
+)
 
 CARGO_LOCK_TOML = b'''
     version = 3

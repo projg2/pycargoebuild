@@ -7,17 +7,19 @@ import io
 import tarfile
 import textwrap
 import typing
-
 from pathlib import Path
 
 import pytest
 
 from pycargoebuild import __version__
 from pycargoebuild.cargo import Crate, FileCrate, GitCrate, PackageMetadata
-from pycargoebuild.ebuild import (get_ebuild, update_ebuild,
-                                  collapse_whitespace, bash_dquote_escape,
-                                  url_dquote_escape,
-                                  )
+from pycargoebuild.ebuild import (
+    bash_dquote_escape,
+    collapse_whitespace,
+    get_ebuild,
+    update_ebuild,
+    url_dquote_escape,
+)
 
 
 @pytest.fixture(scope="session")

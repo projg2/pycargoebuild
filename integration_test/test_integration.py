@@ -5,7 +5,6 @@
 import logging
 import tarfile
 import typing
-
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlparse
 

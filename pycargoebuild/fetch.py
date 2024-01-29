@@ -7,7 +7,6 @@ import subprocess
 import sys
 import tempfile
 import typing
-
 from pathlib import Path
 
 from pycargoebuild.cargo import Crate, FileCrate

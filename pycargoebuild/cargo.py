@@ -8,7 +8,6 @@ import sys
 import tarfile
 import typing
 import urllib.parse
-
 from pathlib import Path, PurePath
 
 if sys.version_info >= (3, 11):

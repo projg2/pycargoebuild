@@ -6,7 +6,6 @@ import pytest
 
 from pycargoebuild.format import format_license_var
 
-
 FORMAT_TESTS = {
     "": "",
     "A": "A",

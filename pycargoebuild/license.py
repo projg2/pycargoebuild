@@ -8,7 +8,6 @@ import typing
 
 import license_expression
 
-
 MAPPING: typing.Dict[str, str] = {}
 
 

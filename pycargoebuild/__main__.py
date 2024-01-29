@@ -15,7 +15,6 @@ import sys
 import tarfile
 import tempfile
 import typing
-
 from pathlib import Path, PurePosixPath
 
 if sys.version_info >= (3, 11):
@@ -23,17 +22,19 @@ if sys.version_info >= (3, 11):
 else:
     import tomli as tomllib
 
-from pycargoebuild.cargo import (Crate,
-                                 FileCrate,
-                                 get_crates,
-                                 get_package_metadata,
-                                 )
+from pycargoebuild.cargo import (
+    Crate,
+    FileCrate,
+    get_crates,
+    get_package_metadata,
+)
 from pycargoebuild.ebuild import get_ebuild, update_ebuild
-from pycargoebuild.fetch import (fetch_crates_using_wget,
-                                 fetch_crates_using_aria2,
-                                 verify_crates)
-from pycargoebuild.license import load_license_mapping, MAPPING
-
+from pycargoebuild.fetch import (
+    fetch_crates_using_aria2,
+    fetch_crates_using_wget,
+    verify_crates,
+)
+from pycargoebuild.license import MAPPING, load_license_mapping
 
 FETCHERS = ("aria2", "wget")
 

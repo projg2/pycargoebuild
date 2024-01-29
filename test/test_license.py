@@ -10,7 +10,6 @@ import pytest
 
 from pycargoebuild.license import spdx_to_ebuild, symbol_to_ebuild
 
-
 TEST_LICENSE_MAPPING = {
     # keys are lowercase in MAPPING
     "a": "A",
