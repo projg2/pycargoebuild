@@ -54,3 +54,42 @@ ignore_missing_imports = true
 testpaths = [
     "test",
 ]
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+extend-select = [
+    "E",
+#   "N",
+    "W",
+#   "I",
+#   "UP",
+#   "ANN",
+#   "B",
+    "A",
+#   "COM",
+    "CPY",
+#   "C4",
+    "EXE",
+    "ISC",
+#   "PIE",
+#   "PT",
+#   "Q",
+#   "RSE",
+    "RET",
+    "SLOT",
+#   "SIM",
+    "TCH",
+#   "ARG",
+#   "ERA",
+#   "PGH",
+#   "PL",
+#   "PERF",
+    "FURB",
+#   "RUF",
+]
+
+[tool.ruff.lint.flake8-copyright]
+min-file-size = 1
+notice-rgx = "\\(c\\) \\d{4}(-\\d{4})?"
