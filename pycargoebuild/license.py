@@ -11,6 +11,14 @@ import license_expression
 MAPPING: typing.Dict[str, str] = {}
 
 
+class UnmatchedLicense(RuntimeError):
+    """License does not match anything in the mapping"""
+
+    def __init__(self, license_key: str) -> None:
+        super().__init__()
+        self.license_key = license_key
+
+
 def load_license_mapping(f: typing.IO["str"]) -> None:
     """Read license mapping from the specified file"""
     conf = configparser.ConfigParser(comment_prefixes=("#",),
@@ -23,20 +31,29 @@ def load_license_mapping(f: typing.IO["str"]) -> None:
 
 def symbol_to_ebuild(license_symbol: license_expression.LicenseSymbol) -> str:
     full_key = str(license_symbol).lower()
-    no_plus = full_key.replace("+", "")
-    if no_plus not in MAPPING and full_key.startswith("licenseref-"):
+    full_match = MAPPING.get(full_key)
+    no_plus = MAPPING.get(full_key.replace("+", ""))
+
+    # we permit matching LicenseRef- to mapping but do not throw an error
+    # if it's not there
+    if no_plus is None and full_key.startswith("licenseref-"):
         logging.warning(
             f"User defined license found: {str(license_symbol)!r}, mapping "
             "not possible.")
         return ""
+
+    if full_match is not None:
+        return full_match
+
     # if we do not have an exact match, check if it is a "+" expression
     # and try a match without the "+" symbol
-    if full_key not in MAPPING and no_plus in MAPPING:
+    if no_plus is not None:
         logging.warning(
             f"No explicit entry for license {license_symbol} found, "
             f"assuming {str(license_symbol).replace('+', '')}.")
-        return MAPPING[no_plus]
-    return MAPPING[full_key]
+        return no_plus
+
+    raise UnmatchedLicense(full_key)
 
 
 def spdx_to_ebuild(spdx: license_expression.Renderable) -> str:

@@ -34,7 +34,11 @@ from pycargoebuild.fetch import (
     fetch_crates_using_wget,
     verify_crates,
 )
-from pycargoebuild.license import MAPPING, load_license_mapping
+from pycargoebuild.license import (
+    MAPPING,
+    UnmatchedLicense,
+    load_license_mapping,
+)
 
 FETCHERS = ("aria2", "wget")
 
@@ -319,28 +323,46 @@ def main(prog_name: str, *argv: str) -> int:
         # first
         args.no_manifest = True
 
-    if args.input is not None:
-        ebuild = update_ebuild(
-            args.input.read(),
-            pkg_meta,
-            crates,
-            distdir=args.distdir,
-            crate_license=not args.no_license,
-            crate_tarball=crate_tarball if args.crate_tarball else None,
-            license_overrides=config_toml.get("license-overrides", {}),
-            )
-        logging.warning(
-            "The in-place mode updates CRATES, GIT_CRATES and crate "
-            "LICENSE+= variables only, other metadata is left unchanged")
-    else:
-        ebuild = get_ebuild(
-            pkg_meta,
-            crates,
-            distdir=args.distdir,
-            crate_license=not args.no_license,
-            crate_tarball=crate_tarball if args.crate_tarball else None,
-            license_overrides=config_toml.get("license-overrides", {}),
-            )
+    try:
+        if args.input is not None:
+            ebuild = update_ebuild(
+                args.input.read(),
+                pkg_meta,
+                crates,
+                distdir=args.distdir,
+                crate_license=not args.no_license,
+                crate_tarball=crate_tarball if args.crate_tarball else None,
+                license_overrides=config_toml.get("license-overrides", {}),
+                )
+            logging.warning(
+                "The in-place mode updates CRATES, GIT_CRATES and crate "
+                "LICENSE+= variables only, other metadata is left unchanged")
+        else:
+            ebuild = get_ebuild(
+                pkg_meta,
+                crates,
+                distdir=args.distdir,
+                crate_license=not args.no_license,
+                crate_tarball=crate_tarball if args.crate_tarball else None,
+                license_overrides=config_toml.get("license-overrides", {}),
+                )
+    except UnmatchedLicense as e:
+        logging.error(
+            f"The license {e.license_key!r} did not match any entry in "
+            f"{args.license_mapping.name!r}")
+        logging.info(
+            "1. If that is a valid SPDX-2.0 license identifier, then please "
+            "add it to the license mapping file.  However, please make sure "
+            "to:\n"
+            "a. avoid adding duplicate licenses (multiple SPDX-2.0 "
+            "identifiers can map to the same Gentoo license),\n"
+            "b. add new licenses to appropriate license-groups.\n"
+            "\n"
+            "2. If that is not a valid SPDX-2.0 license identiiers, please "
+            "file a bug upstream.  For the time being, you can use a local "
+            "license mapping file (--license-mapping) or per-crate "
+            "license-overrides in config (see README).")
+        return 1
 
     with tempfile.NamedTemporaryFile(mode="w",
                                      encoding="utf-8",
