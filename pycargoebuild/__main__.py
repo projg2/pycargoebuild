@@ -30,6 +30,7 @@ from pycargoebuild.cargo import (
 )
 from pycargoebuild.ebuild import get_ebuild, update_ebuild
 from pycargoebuild.fetch import (
+    ChecksumMismatchError,
     fetch_crates_using_aria2,
     fetch_crates_using_wget,
     verify_crates,
@@ -284,7 +285,14 @@ def main(prog_name: str, *argv: str) -> int:
             return 1
 
     fetch_crates(crates)
-    verify_crates(crates, distdir=args.distdir)
+    try:
+        verify_crates(crates, distdir=args.distdir)
+    except ChecksumMismatchError as e:
+        logging.error(f"Checksum mismatch for {str(e.path)!r}")
+        logging.info(f"   Found checksum (SHA256): {e.current!r}")
+        logging.info(f"Expected checksum (SHA256): {e.expected!r}")
+        logging.info("Remove the file to try downloading again.")
+        return 1
 
     umask = os.umask(0)
     os.umask(umask)

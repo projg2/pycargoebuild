@@ -12,6 +12,18 @@ from pathlib import Path
 from pycargoebuild.cargo import Crate, FileCrate
 
 
+class ChecksumMismatchError(RuntimeError):
+    def __init__(self,
+                 path: Path,
+                 current: str,
+                 expected: str,
+                 ) -> None:
+        super().__init__()
+        self.path = path
+        self.current = current
+        self.expected = expected
+
+
 def fetch_crates_using_aria2(crates: typing.Iterable[Crate], *, distdir: Path
                              ) -> None:
     """
@@ -77,9 +89,7 @@ def verify_files(files: typing.Iterable[typing.Tuple[Path, str]]) -> None:
                     break
                 hasher.update(mv[:rd])
             if hasher.hexdigest() != checksum:
-                raise RuntimeError(
-                    f"checksum mismatch for {path}, got: "
-                    f"{hasher.hexdigest()}, exp: {checksum}")
+                raise ChecksumMismatchError(path, hasher.hexdigest(), checksum)
 
 
 def verify_crates(crates: typing.Iterable[Crate], *, distdir: Path) -> None:
