@@ -649,5 +649,5 @@ def test_bash_dquote_escape():
 
 def test_url_dquote_escape():
     assert (url_dquote_escape(
-                "https://example.com/\u00A0`tricky \"${whitespace}\"") ==
+                'https://example.com/\u00A0`tricky "${whitespace}"') ==
             "https://example.com/%C2%A0%60tricky+%22%24{whitespace}%22")

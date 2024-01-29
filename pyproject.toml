@@ -75,7 +75,7 @@ extend-select = [
     "ISC",
 #   "PIE",
 #   "PT",
-#   "Q",
+    "Q",
 #   "RSE",
     "RET",
     "SLOT",
