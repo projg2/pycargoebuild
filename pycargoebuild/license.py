@@ -53,7 +53,7 @@ def symbol_to_ebuild(license_symbol: license_expression.LicenseSymbol) -> str:
             f"assuming {str(license_symbol).replace('+', '')}.")
         return no_plus
 
-    raise UnmatchedLicense(full_key)
+    raise UnmatchedLicense(str(license_symbol))
 
 
 def spdx_to_ebuild(spdx: license_expression.Renderable) -> str:
