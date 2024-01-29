@@ -23,7 +23,7 @@ from pycargoebuild.cargo import (
     get_package_metadata,
 )
 from pycargoebuild.format import format_license_var
-from pycargoebuild.license import spdx_to_ebuild
+from pycargoebuild.license import UnmatchedLicense, spdx_to_ebuild
 
 EBUILD_TEMPLATE_START = """\
 # Copyright {year} Gentoo Authors
@@ -152,20 +152,32 @@ def get_crate_LICENSE(crates: typing.Iterable[Crate],
     """
 
     spdx = license_expression.get_spdx_licensing()
-    crate_licenses = {get_license_from_crate(crate, distdir)
-                      if crate.name not in license_overrides
-                      else license_overrides[crate.name]
-                      for crate in crates}
-    crate_licenses.discard(None)
+    crate_licenses = {
+        crate.filename: get_license_from_crate(crate, distdir)
+        if crate.name not in license_overrides
+        else license_overrides[crate.name]
+        for crate in crates
+    }
+    crate_licenses_set = set(crate_licenses.values())
+    crate_licenses_set.discard(None)
 
     # combine crate licenses and simplify the result
-    combined_license = " AND ".join(f"( {x} )" for x in crate_licenses)
+    combined_license = " AND ".join(f"( {x} )" for x in crate_licenses_set)
     parsed_license = spdx.parse(combined_license, strict=True)
     if parsed_license is None:
         return ""
     final_license = parsed_license.simplify()
-    crate_licenses_str = format_license_var(spdx_to_ebuild(final_license),
-                                            prefix='LICENSE+=" ')
+    try:
+        crate_licenses_str = format_license_var(spdx_to_ebuild(final_license),
+                                                prefix='LICENSE+=" ')
+    except UnmatchedLicense as e:
+        # find the crate using that license
+        for crate_name, crate_license in crate_licenses.items():
+            parsed_license = spdx.parse(crate_license, strict=True)
+            if parsed_license is not None:
+                if e.license_key in (str(x) for x in parsed_license.symbols):
+                    raise UnmatchedLicense(e.license_key, crate_name)
+        raise AssertionError("Unable to match unmatched license to a crate")
     # if it's not a multiline string, we need to prepend " "
     if not crate_licenses_str.startswith("\n"):
         crate_licenses_str = " " + crate_licenses_str

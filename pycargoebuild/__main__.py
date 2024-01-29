@@ -350,6 +350,8 @@ def main(prog_name: str, *argv: str) -> int:
         logging.error(
             f"The license {e.license_key!r} did not match any entry in "
             f"{args.license_mapping.name!r}")
+        if e.crate is not None:
+            logging.info(f"Crate file: {e.crate!r}")
         logging.info(
             "1. If that is a valid SPDX-2.0 license identifier, then please "
             "add it to the license mapping file.  However, please make sure "

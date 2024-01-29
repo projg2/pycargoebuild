@@ -14,9 +14,13 @@ MAPPING: typing.Dict[str, str] = {}
 class UnmatchedLicense(RuntimeError):
     """License does not match anything in the mapping"""
 
-    def __init__(self, license_key: str) -> None:
+    def __init__(self,
+                 license_key: str,
+                 crate: typing.Optional[str] = None,
+                 ) -> None:
         super().__init__()
         self.license_key = license_key
+        self.crate = crate
 
 
 def load_license_mapping(f: typing.IO["str"]) -> None:
