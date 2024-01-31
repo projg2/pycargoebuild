@@ -249,7 +249,15 @@ def main(prog_name: str, *argv: str) -> int:
     crates: typing.Set[Crate] = set()
     pkg_metas = []
     for directory in args.directory:
-        with open(directory / "Cargo.toml", "rb") as f:
+        try:
+            f = open(directory / "Cargo.toml", "rb")
+        except FileNotFoundError:
+            logging.error(f"'Cargo.toml' not found in {str(directory)!r}")
+            logging.info(
+                "Please pass the path to a directory containing 'Cargo.toml' "
+                "as an argument.")
+            return 1
+        with f:
             workspace = get_workspace_root(directory)
             crates.update(workspace.crates)
             pkg_metas.append(
