@@ -25,6 +25,7 @@ else:
 from pycargoebuild.cargo import (
     Crate,
     FileCrate,
+    WorkspaceCargoTomlError,
     get_crates,
     get_package_metadata,
 )
@@ -260,8 +261,16 @@ def main(prog_name: str, *argv: str) -> int:
         with f:
             workspace = get_workspace_root(directory)
             crates.update(workspace.crates)
-            pkg_metas.append(
-                get_package_metadata(f, workspace.workspace_metadata))
+            try:
+                pkg_metas.append(
+                    get_package_metadata(f, workspace.workspace_metadata))
+            except WorkspaceCargoTomlError as e:
+                logging.error("The specified directory is a workspace root: "
+                              f"{str(directory)!r}")
+                logging.info(
+                    "Please run pycargoebuild in one of its members: "
+                    f"{' '.join(e.members)}")
+                return 1
     pkg_meta = pkg_metas[0]
 
     if args.no_license:

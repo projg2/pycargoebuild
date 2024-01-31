@@ -156,7 +156,10 @@ class PackageMetadata(typing.NamedTuple):
 
 class WorkspaceCargoTomlError(RuntimeError):
     """Cargo.toml belongs to a workspace root"""
-    pass
+
+    def __init__(self, members: list[str]) -> None:
+        super().__init__()
+        self.members = members
 
 
 def cargo_to_spdx(license_str: str) -> str:
@@ -226,9 +229,7 @@ def get_package_metadata(f: typing.BinaryIO,
 
     if "package" not in cargo_toml and "workspace" in cargo_toml:
         raise WorkspaceCargoTomlError(
-            "Specified directory seems to be a workspace root, please run "
-            "pycargoebuild on one of its members instead: "
-            f"{' '.join(cargo_toml['workspace']['members'])}")
+            cargo_toml["workspace"]["members"])
 
     pkg_meta = cargo_toml["package"]
     _get_meta_key = functools.partial(get_meta_key,
