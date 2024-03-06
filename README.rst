@@ -2,7 +2,7 @@
 pycargoebuild
 =============
 :Author: Michał Górny
-:License: MIT
+:License: GPL-2.0-or-later
 :Homepage: https://github.com/projg2/pycargoebuild/
 
 
