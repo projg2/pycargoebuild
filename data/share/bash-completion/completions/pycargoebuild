@@ -1,0 +1,48 @@
+# pycargoebuild
+# (c) 2024 Arthur Zamarin <arthurzam@gentoo.org>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+_pycargoebuild() {
+    local i cur prev
+    _get_comp_words_by_ref cur prev
+
+    local OPTS=(
+        -h --help -c --crate-tarball --crate-tarball-path --crate-tarball-prefix
+        -d --distdir -f --force -F --fetcher -i --input --inplace --no-config
+        -l --license-mapping -L --no-license -M --no-manifest -o --output
+    )
+
+    case ${prev} in
+        --crate-tarball-prefix)
+            COMPREPLY=()
+            return 0
+            ;;
+        --crate-tarball-path)
+            _filedir
+            return 0
+            ;;
+        -i|--input|--inplace|-o|--output)
+            _filedir 'ebuild'
+            return 0
+            ;;
+        -d|--distdir)
+            _filedir -d
+            return 0
+            ;;
+        -l|--license-mapping)
+            _filedir
+            return 0
+            ;;
+        -F|--fetcher)
+            COMPREPLY=($(compgen -W 'auto aria2 wget' -- "${cur}"))
+            return 0
+            ;;
+    esac
+
+    if [[ ${cur} == -* ]]; then
+        COMPREPLY=( $(compgen -W '${OPTS[*]}' -- "${cur}") )
+    else
+        _filedir -d
+    fi
+} &&
+complete -F _pycargoebuild pycargoebuild
