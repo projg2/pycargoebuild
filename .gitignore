@@ -1,3 +1,5 @@
 __pycache__/
 /.tox/
 /integration_test/dist/
+
+/dist/
