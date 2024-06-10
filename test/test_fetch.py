@@ -14,10 +14,8 @@ BAR_CSUM = "22d39d98821d4b60c3fcbd0fead3c873ddd568971cc530070254b769e18623f3"
 @pytest.fixture(scope="session")
 def test_crates(tmp_path_factory):
     test_dir = tmp_path_factory.mktemp("crates")
-    with open(test_dir / "foo-1.crate", "wb") as f:
-        f.write(b"test string\n")
-    with open(test_dir / "bar-2.crate", "wb") as f:
-        f.write(b"other string\n")
+    (test_dir / "foo-1.crate").write_bytes(b"test string\n")
+    (test_dir / "bar-2.crate").write_bytes(b"other string\n")
     yield test_dir
 
 
