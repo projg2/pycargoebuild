@@ -333,7 +333,7 @@ def main(prog_name: str, *argv: str) -> int:
                                   mode="w:xz",
                                   format=tarfile.GNU_FORMAT,
                                   encoding="UTF-8",
-                                  preset=9 | lzma.PRESET_EXTREME,
+                                  preset=9 | lzma.PRESET_EXTREME,  # type: ignore
                                   ) as tar_out:  # type: ignore
                     os.fchmod(cratef.fileno(), 0o666 & ~umask)
                     logging.info("Repacking crates ...")
