@@ -56,7 +56,7 @@ CARGO_LOCK_TOML = b'''
     [[package]]
     name = "regex-syntax"
     version = "0.6.28"
-    source = """git+https://github.com/01mf02/regex?rev=90eebbd\\
+    source = """git+https://github.com/01mf02/regex.git/?rev=90eebbd\\
                 #90eebbdb9396ca10510130327073a3d596674d04"""
 '''
 

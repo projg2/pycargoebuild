@@ -192,7 +192,7 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                     raise RuntimeError(
                         "Git crate with no fragment identifier (i.e. commit "
                         f"identifier): {p['source']!r}")
-                repo = parsed_url.path.lstrip("/")
+                repo = parsed_url.path.strip("/")
                 if repo.endswith(".git"):
                     repo = repo[:-4]
                 if repo.count("/") != 1:
