@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 import dataclasses
+import enum
 import functools
 import sys
 import tarfile
@@ -56,18 +57,62 @@ class FileCrate(Crate):
         return f"{self.name}@{self.version}"
 
 
+class GitHost(enum.Enum):
+    GITHUB = enum.auto()
+    GITLAB = enum.auto()
+    GITLAB_SELFHOSTED = enum.auto()
+
+
 @dataclasses.dataclass(frozen=True)
 class GitCrate(Crate):
     repository: str
     commit: str
 
+    def __post_init__(self) -> None:
+        self.repo_host  # check for supported git hosts
+
+    @functools.cached_property
+    def repo_host(self) -> GitHost:
+        if self.repository.startswith("https://github.com/"):
+            return GitHost.GITHUB
+        if self.repository.startswith("https://gitlab.com/"):
+            return GitHost.GITLAB
+        if self.repository.startswith("https://gitlab."):
+            return GitHost.GITLAB_SELFHOSTED
+        raise RuntimeError("Unsupported git crate source: "
+                           f"{self.repository}")
+
+    @property
+    def repo_name(self) -> str:
+        return self.repository.rpartition("/")[2]
+
+    @property
+    def repo_ext(self) -> str:
+        """Used by cargo.eclass to abbreviate crate URI"""
+        match self.repo_host:
+            case GitHost.GITHUB:
+                return ".gh"
+            case GitHost.GITLAB:
+                return ".gl"
+            case GitHost.GITLAB_SELFHOSTED:
+                return ""
+            case _ as host:
+                typing.assert_never(host)
+
     @property
     def download_url(self) -> str:
-        return f"{self.repository}/archive/{self.commit}.tar.gz"
+        match self.repo_host:
+            case GitHost.GITHUB:
+                return f"{self.repository}/archive/{self.commit}.tar.gz"
+            case GitHost.GITLAB | GitHost.GITLAB_SELFHOSTED:
+                return (f"{self.repository}/-/archive/{self.commit}/"
+                        f"{self.repo_name}-{self.commit}.tar.gz")
+            case _ as host:
+                typing.assert_never(host)
 
     @property
     def filename(self) -> str:
-        return f"{self.repository.rpartition('/')[2]}-{self.commit}.gh.tar.gz"
+        return f"{self.repo_name}-{self.commit}{self.repo_ext}.tar.gz"
 
     @functools.cache
     def get_workspace_toml(self, distdir: Path) -> dict:
@@ -117,7 +162,14 @@ class GitCrate(Crate):
     def get_git_crate_entry(self, distdir: Path) -> str:
         subdir = (str(self.get_package_directory(distdir))
                   .replace(self.commit, "%commit%"))
-        return f"{self.repository};{self.commit};{subdir}"
+        match self.repo_host:
+            case GitHost.GITHUB | GitHost.GITLAB:
+                return f"{self.repository};{self.commit};{subdir}"
+            case GitHost.GITLAB_SELFHOSTED:
+                crate_uri = self.download_url.replace(self.commit, "%commit%")
+                return f"{crate_uri};{self.commit};{subdir}"
+            case _ as host:
+                typing.assert_never(host)
 
     @functools.cache
     def get_root_directory(self, distdir: Path) -> typing.Optional[PurePath]:
@@ -186,7 +238,7 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                 yield FileCrate(name=p["name"],
                                 version=p["version"],
                                 checksum=p["checksum"])
-            elif p["source"].startswith("git+https://github.com/"):
+            elif p["source"].startswith("git+"):
                 parsed_url = urllib.parse.urlsplit(p["source"])
                 if not parsed_url.fragment:
                     raise RuntimeError(
@@ -194,11 +246,12 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                         f"identifier): {p['source']!r}")
                 repo = parsed_url.path.strip("/").removesuffix(".git")
                 if repo.count("/") != 1:
-                    raise RuntimeError(f"Invalid GitHub URL: {p['source']}")
+                    raise RuntimeError("Invalid GitHub/GitLab URL: "
+                                       f"{p['source']}")
                 yield GitCrate(
                     name=p["name"],
                     version=p["version"],
-                    repository=f"https://github.com/{repo}",
+                    repository=f"https://{parsed_url.netloc}/{repo}",
                     commit=parsed_url.fragment)
             else:
                 raise RuntimeError(f"Unsupported crate source: {p['source']}")

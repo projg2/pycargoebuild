@@ -155,6 +155,14 @@ PACKAGES = {
         checksum="52fd58ffd0865793eb96f4c959c971eb"
                  "e724881863ab0dafca445baf89d21714",
         directories=["matrix_synapse-1.72.0/rust"]),
+    "news_flash_gtk-0.0.0.ebuild": Package(
+        url="https://gitlab.com/news-flash/news_flash_gtk/-/archive/"
+            "v.3.3.4/news_flash_gtk-v.3.3.4.tar.gz",
+        checksum="f408f4c2d1e1507008ef583868b84827"
+                 "08d13269b86b8e22d2ba73da9c93a0ae",
+        directories=["news_flash_gtk-v.3.3.4"],
+        has_crates_without_license=True,
+        uses_license_file=True),
 }
 
 
