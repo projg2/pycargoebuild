@@ -63,11 +63,29 @@ class GitCrate(Crate):
 
     @property
     def download_url(self) -> str:
-        return f"{self.repository}/archive/{self.commit}.tar.gz"
+        if self.repository.startswith("https://github.com/"):
+            return f"{self.repository}/archive/{self.commit}.tar.gz"
+        if self.repository.startswith("https://gitlab."):
+            return (f"{self.repository}/-/archive/{self.commit}/"
+                    f"{self.repo_name}-{self.commit}.tar.gz")
+        raise RuntimeError(f"Unsupported git crate source: "
+                           f"{self.repository}")
 
     @property
     def filename(self) -> str:
-        return f"{self.repository.rpartition('/')[2]}-{self.commit}.gh.tar.gz"
+        return f"{self.repo_name}-{self.commit}{self.repo_ext}.tar.gz"
+
+    @property
+    def repo_ext(self) -> str:
+        if self.repository.startswith("https://github.com/"):
+            return ".gh"
+        if self.repository.startswith("https://gitlab.com/"):
+            return ".gl"
+        return ""
+
+    @property
+    def repo_name(self) -> str:
+        return self.repository.rpartition("/")[2]
 
     @functools.cache
     def get_workspace_toml(self, distdir: Path) -> dict:
@@ -117,7 +135,11 @@ class GitCrate(Crate):
     def get_git_crate_entry(self, distdir: Path) -> str:
         subdir = (str(self.get_package_directory(distdir))
                   .replace(self.commit, "%commit%"))
-        return f"{self.repository};{self.commit};{subdir}"
+        if self.repo_ext:
+            crate_uri = self.repository
+        else:
+            crate_uri = self.download_url.replace(self.commit, "%commit%")
+        return f"{crate_uri};{self.commit};{subdir}"
 
     @functools.cache
     def get_root_directory(self, distdir: Path) -> typing.Optional[PurePath]:
@@ -186,7 +208,8 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                 yield FileCrate(name=p["name"],
                                 version=p["version"],
                                 checksum=p["checksum"])
-            elif p["source"].startswith("git+https://github.com/"):
+            elif (p["source"].startswith("git+https://github.com/") or
+                  p["source"].startswith("git+https://gitlab.")):
                 parsed_url = urllib.parse.urlsplit(p["source"])
                 if not parsed_url.fragment:
                     raise RuntimeError(
@@ -196,11 +219,12 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                 if repo.endswith(".git"):
                     repo = repo[:-4]
                 if repo.count("/") != 1:
-                    raise RuntimeError(f"Invalid GitHub URL: {p['source']}")
+                    raise RuntimeError("Invalid GitHub/GitLab URL: "
+                                       f"{p['source']}")
                 yield GitCrate(
                     name=p["name"],
                     version=p["version"],
-                    repository=f"https://github.com/{repo}",
+                    repository=f"https://{parsed_url.netloc}/{repo}",
                     commit=parsed_url.fragment)
             else:
                 raise RuntimeError(f"Unsupported crate source: {p['source']}")
