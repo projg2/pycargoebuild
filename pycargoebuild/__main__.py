@@ -397,6 +397,8 @@ def main(prog_name: str, *argv: str) -> int:
                                      delete=False) as outf:
         try:
             if args.input is not None:
+                st = os.stat(args.input.fileno())
+                os.chown(outf.fileno(), st.st_uid, st.st_gid)
                 # typeshed is missing fd support in shutil.copymode()
                 # https://github.com/python/typeshed/issues/9288
                 shutil.copymode(args.input.fileno(),
