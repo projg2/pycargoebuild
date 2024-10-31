@@ -172,7 +172,7 @@ def cargo_to_spdx(license_str: str) -> str:
 def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
     """Read crate list from the open ``Cargo.lock`` file"""
     cargo_lock = tomllib.load(f)
-    if cargo_lock["version"] != 3:
+    if cargo_lock["version"] not in (3, 4):
         raise NotImplementedError(
             f"Cargo.lock version '{cargo_lock['version']} unsupported")
 
