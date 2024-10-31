@@ -75,6 +75,12 @@ PACKAGES = {
         checksum="3194243acf12383bd328a9440ab1ae30"
                  "4e9ba244d3bd7f85f1c23b0745c4847a",
         directories=["mdbook-linkcheck-0.7.7"]),
+    "milkshake-terminal-0.0.0.ebuild": Package(
+        url="https://github.com/mizz1e/milkshake-terminal/archive/"
+            "v0.0.1.tar.gz",
+        checksum="1230635f2e1f707276f33a9e30e91334"
+                 "fcff3df7c0e4d4486596e9c9102776d6",
+        directories=["milkshake-terminal-0.0.1"]),
     "qiskit-terra-0.22.3.ebuild": Package(
         url="https://files.pythonhosted.org/packages/98/11/"
             "afb20dd5af0fcf9d5ca57e4cfb2b0b3b1e73fa9dcd39ece82389b77f428a/"
