@@ -9,7 +9,7 @@ import json
 import logging
 import lzma
 import os.path
-import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -399,10 +399,7 @@ def main(prog_name: str, *argv: str) -> int:
             if args.input is not None:
                 st = os.stat(args.input.fileno())
                 os.chown(outf.fileno(), st.st_uid, st.st_gid)
-                # typeshed is missing fd support in shutil.copymode()
-                # https://github.com/python/typeshed/issues/9288
-                shutil.copymode(args.input.fileno(),
-                                outf.fileno())  # type: ignore
+                os.chmod(outf.fileno(), stat.S_IMODE(st.st_mode))
                 args.input.close()
             else:
                 os.fchmod(outf.fileno(), 0o666 & ~umask)
