@@ -71,7 +71,7 @@ class GitCrate(Crate):
     def __post_init__(self) -> None:
         self.repo_host  # check for supported git hosts
 
-    @property
+    @functools.cached_property
     def repo_host(self) -> GitHost:
         if self.repository.startswith("https://github.com/"):
             return GitHost.GITHUB
@@ -162,10 +162,14 @@ class GitCrate(Crate):
     def get_git_crate_entry(self, distdir: Path) -> str:
         subdir = (str(self.get_package_directory(distdir))
                   .replace(self.commit, "%commit%"))
-        if self.repo_ext:
-            return f"{self.repository};{self.commit};{subdir}"
-        crate_uri = self.download_url.replace(self.commit, "%commit%")
-        return f"{crate_uri};{self.commit};{subdir}"
+        match self.repo_host:
+            case GitHost.GITHUB | GitHost.GITLAB:
+                return f"{self.repository};{self.commit};{subdir}"
+            case GitHost.GITLAB_SELFHOSTED:
+                crate_uri = self.download_url.replace(self.commit, "%commit%")
+                return f"{crate_uri};{self.commit};{subdir}"
+            case _ as host:
+                typing.assert_never(host)
 
     @functools.cache
     def get_root_directory(self, distdir: Path) -> typing.Optional[PurePath]:
@@ -234,7 +238,7 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
                 yield FileCrate(name=p["name"],
                                 version=p["version"],
                                 checksum=p["checksum"])
-            elif (p["source"].startswith("git+")):
+            elif p["source"].startswith("git+"):
                 parsed_url = urllib.parse.urlsplit(p["source"])
                 if not parsed_url.fragment:
                     raise RuntimeError(
