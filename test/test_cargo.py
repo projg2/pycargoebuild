@@ -58,6 +58,18 @@ CARGO_LOCK_TOML = b'''
     version = "0.6.28"
     source = """git+https://github.com/01mf02/regex.git/?rev=90eebbd\\
                 #90eebbdb9396ca10510130327073a3d596674d04"""
+
+    [[package]]
+    name = "virtiofsd"
+    version = "1.12.0"
+    source = """git+https://gitlab.com/virtio-fs/virtiofsd?tag=v1.12.0\\
+                #af439fbf89f53e18021e8d01dbbb7f66ffd824c1"""
+
+    [[package]]
+    name = "pipewire"
+    version = "0.8.0"
+    source = """git+https://gitlab.freedesktop.org/pipewire/pipewire-rs\\
+                ?tag=v0.8.0#449bf53f5d5edc8d0be6c0c80bc19d882f712dd7"""
 '''
 
 CRATES = [
@@ -70,6 +82,12 @@ CRATES = [
     GitCrate("regex-syntax", "0.6.28",
              "https://github.com/01mf02/regex",
              "90eebbdb9396ca10510130327073a3d596674d04"),
+    GitCrate("virtiofsd", "1.12.0",
+             "https://gitlab.com/virtio-fs/virtiofsd",
+             "af439fbf89f53e18021e8d01dbbb7f66ffd824c1"),
+    GitCrate("pipewire", "0.8.0",
+             "https://gitlab.freedesktop.org/pipewire/pipewire-rs",
+             "449bf53f5d5edc8d0be6c0c80bc19d882f712dd7"),
 ]
 
 
