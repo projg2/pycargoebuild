@@ -1,5 +1,5 @@
 # pycargoebuild
-# (c) 2022-2024 Michał Górny <mgorny@gentoo.org>
+# (c) 2022-2025 Michał Górny <mgorny@gentoo.org>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 import argparse
@@ -64,6 +64,10 @@ def main(prog_name: str, *argv: str) -> int:
                       default="cargo_home/gentoo",
                       help="Prefix prepended for all paths in the crate "
                            "tarball (default: cargo_home/gentoo)")
+    argp.add_argument("--no-write-crate-tarball",
+                      action="store_true",
+                      help="Do not create the crate tarball, just write "
+                           "the ebuild assuming it exists")
     argp.add_argument("-d", "--distdir",
                       type=Path,
                       help="Directory to store downloaded crates in "
@@ -319,34 +323,37 @@ def main(prog_name: str, *argv: str) -> int:
             args.crate_tarball_path.format(name=pkg_meta.name,
                                            version=pkg_meta.version,
                                            distdir=args.distdir))
-        if not args.force and crate_tarball.exists():
-            logging.error(f"{crate_tarball} exists already, pass -f to "
-                          "overwrite it")
-            return 1
-        with tempfile.NamedTemporaryFile(mode="wb",
-                                         dir=args.distdir,
-                                         delete=False
-                                         ) as cratef:
-            try:
-                # typing: https://github.com/python/typeshed/issues/11072
-                with tarfile.open(fileobj=cratef,
-                                  mode="w:xz",
-                                  format=tarfile.GNU_FORMAT,
-                                  encoding="UTF-8",
-                                  preset=9 | lzma.PRESET_EXTREME,  # type: ignore
-                                  ) as tar_out:  # type: ignore
-                    os.fchmod(cratef.fileno(), 0o666 & ~umask)
-                    logging.info("Repacking crates ...")
-                    repack_crates(tar_out, crates)
-            except BaseException:
-                Path(cratef.name).unlink()
-                raise
-        Path(cratef.name).rename(crate_tarball)
-        logging.info(f"Crate tarball written to {crate_tarball}")
+        if args.no_write_crate_tarball:
+            logging.info("Skipping creating crate tarball")
+        else:
+            if not args.force and crate_tarball.exists():
+                logging.error(f"{crate_tarball} exists already, pass -f to "
+                              "overwrite it")
+                return 1
+            with tempfile.NamedTemporaryFile(mode="wb",
+                                             dir=args.distdir,
+                                             delete=False
+                                             ) as cratef:
+                try:
+                    # typing: https://github.com/python/typeshed/issues/11072
+                    with tarfile.open(fileobj=cratef,
+                                      mode="w:xz",
+                                      format=tarfile.GNU_FORMAT,
+                                      encoding="UTF-8",
+                                      preset=9 | lzma.PRESET_EXTREME,  # type: ignore
+                                      ) as tar_out:  # type: ignore
+                        os.fchmod(cratef.fileno(), 0o666 & ~umask)
+                        logging.info("Repacking crates ...")
+                        repack_crates(tar_out, crates)
+                except BaseException:
+                    Path(cratef.name).unlink()
+                    raise
+            Path(cratef.name).rename(crate_tarball)
+            logging.info(f"Crate tarball written to {crate_tarball}")
 
-        # do not regenerate Manifest, crate tarball needs to be uploaded
-        # first
-        args.no_manifest = True
+            # do not regenerate Manifest, crate tarball needs to be uploaded
+            # first
+            args.no_manifest = True
 
     try:
         if args.input is not None:
