@@ -104,8 +104,7 @@ PACKAGES = {
                 "video/software", "web", "web/common",
                 "web/packages/extension/safari", "wstr"]
         ],
-        has_crates_without_license=True,
-        uses_licenseref=True),
+        has_crates_without_license=True),
     "rustworkx-0.12.1.ebuild": Package(
         url="https://files.pythonhosted.org/packages/17/e6/"
             "924967efd523c0bfed2868b62c334a3339f21fba0ac4b447089731312159/"
