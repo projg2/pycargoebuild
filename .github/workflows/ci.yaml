@@ -17,6 +17,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install tox
         run: pip install tox
+      - name: Cache fetched crates
+        uses: actions/cache@v4
+        if: ${{ matrix.suite == 'integration' }}
+        with:
+          path: integration_test/dist
+          key: dist
       - name: Test using tox
         run: tox -e ${{ matrix.suite }}
   qa:
