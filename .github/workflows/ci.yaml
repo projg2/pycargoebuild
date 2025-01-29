@@ -12,9 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
       - name: Install tox
         run: pip install tox
       - name: Cache fetched crates
