@@ -18,7 +18,9 @@ class ChecksumMismatchError(RuntimeError):
                  current: str,
                  expected: str,
                  ) -> None:
-        super().__init__()
+        super().__init__(f"Checksum mismatch for {path}\n"
+                         f" current: {current}\n"
+                         f"expected: {expected}")
         self.path = path
         self.current = current
         self.expected = expected
