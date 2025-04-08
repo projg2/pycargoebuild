@@ -59,10 +59,13 @@ EBUILD_TEMPLATE_CRATE_LICENSE = """\
 LICENSE+="{crate_licenses}"
 """
 
+EBUILD_TEMPLATE_FEATURES = """\
+IUSE="{pkg_features}"
+"""
+
 EBUILD_TEMPLATE_END = """\
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="{pkg_features}"
 """
 
 EBUILD_TEMPLATE_SRC_CONFIGURE = """
@@ -245,6 +248,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
                crate_license: bool = True,
                crate_tarball: typing.Optional[Path] = None,
                license_overrides: typing.Dict[str, str] = {},
+               features: bool,
                ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
@@ -253,10 +257,12 @@ def get_ebuild(pkg_meta: PackageMetadata,
     template = EBUILD_TEMPLATE_START
     if crate_license:
         template += EBUILD_TEMPLATE_CRATE_LICENSE
+    if features:
+        template += EBUILD_TEMPLATE_FEATURES
     template += EBUILD_TEMPLATE_END
 
     iuse = get_IUSE(pkg_meta.features)
-    if pkg_meta.features and iuse:
+    if pkg_meta.features and iuse and features:
         template += EBUILD_TEMPLATE_SRC_CONFIGURE
 
     return template.format(

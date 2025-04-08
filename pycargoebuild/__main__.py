@@ -56,6 +56,9 @@ def main(prog_name: str, *argv: str) -> int:
                       action="store_true",
                       help="Pack fetched crates into a tarball rather than "
                            "adding them to the CRATES variable")
+    argp.add_argument("-e", "--features",
+                      action="store_true",
+                      help="Add features support to the ebuild")
     argp.add_argument("--crate-tarball-path",
                       default="{distdir}/{name}-{version}-crates.tar.xz",
                       help="Path to write crate tarball to (default: "
@@ -377,6 +380,7 @@ def main(prog_name: str, *argv: str) -> int:
                 crate_license=not args.no_license,
                 crate_tarball=crate_tarball if args.crate_tarball else None,
                 license_overrides=config_toml.get("license-overrides", {}),
+                features=args.features,
                 )
     except UnmatchedLicense as e:
         logging.error(
