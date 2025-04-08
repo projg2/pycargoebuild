@@ -62,6 +62,14 @@ LICENSE+="{crate_licenses}"
 EBUILD_TEMPLATE_END = """\
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="{pkg_features}"
+"""
+
+EBUILD_TEMPLATE_SRC_CONFIGURE = """
+src_configure() {{
+\tlocal myfeatures=({pkg_features_use})
+\tcargo_src_configure
+}}
 """
 
 
@@ -79,6 +87,25 @@ def get_CRATES(crates: typing.Iterable[Crate],
                              if isinstance(c, FileCrate))) +
             "\n")
 
+def get_IUSE(features: typing.Optional[dict]) -> str:
+    """
+    Return the value of IUSE for the given crate list
+    """
+    if features is None:
+        return ""
+    return "".join(sorted(f"{feature} "
+                          for feature in features.keys()
+                          if feature != "default"))
+
+def get_myfeatures(features: typing.Optional[dict]) -> str:
+    """
+    Return the value of myfeatures for the given crate list
+    """
+    if features is None:
+        return ""
+    return "\n"+"\n".join(sorted(f"\t$(usev {feature})"
+                          for feature in features.keys()
+                          if feature != "default"))
 
 def get_GIT_CRATES(crates: typing.Iterable[Crate],
                    distdir: Path,
@@ -221,6 +248,10 @@ def get_ebuild(pkg_meta: PackageMetadata,
         template += EBUILD_TEMPLATE_CRATE_LICENSE
     template += EBUILD_TEMPLATE_END
 
+    iuse = get_IUSE(pkg_meta.features)
+    if pkg_meta.features and iuse:
+        template += EBUILD_TEMPLATE_SRC_CONFIGURE
+
     return template.format(
         crates=get_CRATES(crates if crate_tarball is None else ()),
         crate_licenses=get_crate_LICENSE(crates, distdir, license_overrides),
@@ -230,6 +261,8 @@ def get_ebuild(pkg_meta: PackageMetadata,
         opt_crate_tarball=EBUILD_TEMPLATE_CRATE_TARBALL.format(
             crate_tarball.name) if crate_tarball is not None else "",
         opt_git_crates=get_GIT_CRATES(crates, distdir),
+        pkg_features=get_IUSE(pkg_meta.features),
+        pkg_features_use=get_myfeatures(pkg_meta.features),
         pkg_license=get_package_LICENSE(pkg_meta.license),
         prog_version=__version__,
         year=datetime.date.today().year)
