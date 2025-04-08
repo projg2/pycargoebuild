@@ -191,6 +191,7 @@ class GitCrate(Crate):
 class PackageMetadata(typing.NamedTuple):
     name: str
     version: str
+    features: typing.Optional[dict[str, list[str]]] = None
     license: typing.Optional[str] = None
     license_file: typing.Optional[str] = None
     description: typing.Optional[str] = None
@@ -299,6 +300,7 @@ def get_package_metadata(f: typing.BinaryIO,
         name=pkg_meta["name"],
         version=pkg_version,
         license=pkg_license,
+        features=cargo_toml.get("features"),
         license_file=_get_meta_key("license-file"),
         description=_get_meta_key("description"),
         homepage=_get_meta_key("homepage"))

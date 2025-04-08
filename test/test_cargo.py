@@ -160,6 +160,26 @@ def test_get_package_metadata_license_file():
                             license_file="COPYING"))
 
 
+def test_get_package_metadata_features():
+    input_toml = """
+        [package]
+        name = "test"
+        version = "0"
+        license-file = "COPYING"
+
+        [features]
+        default = ["foo"]
+        foo = ["bar"]
+        bar = []
+    """
+
+    assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
+            PackageMetadata(name="test",
+                            version="0",
+                            features={"default": ["foo"], "foo": ["bar"], "bar": []},
+                            license_file="COPYING"))
+
+
 TOP_CARGO_TOML = b"""\
 [package]
 name = "toplevel"

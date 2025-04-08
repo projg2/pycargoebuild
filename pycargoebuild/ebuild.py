@@ -59,9 +59,20 @@ EBUILD_TEMPLATE_CRATE_LICENSE = """\
 LICENSE+="{crate_licenses}"
 """
 
+EBUILD_TEMPLATE_FEATURES = """\
+IUSE="{pkg_features}"
+"""
+
 EBUILD_TEMPLATE_END = """\
 SLOT="0"
 KEYWORDS="~amd64"
+"""
+
+EBUILD_TEMPLATE_SRC_CONFIGURE = """
+src_configure() {{
+\tlocal myfeatures=(\n{pkg_features_use}\n\t)
+\tcargo_src_configure
+}}
 """
 
 
@@ -78,6 +89,30 @@ def get_CRATES(crates: typing.Iterable[Crate],
                              for c in crates
                              if isinstance(c, FileCrate))) +
             "\n")
+
+
+def get_IUSE(features: typing.Optional[dict]) -> str:
+    """
+    Return the IUSE string for the given features dictionary.
+    """
+    if not features:
+        return ""
+
+    default_features = frozenset(features.get("default", []))
+    all_features = sorted(x for x in features if x != "default")
+    return " ".join(
+        f"+{x}" if x in default_features else x for x in all_features)
+
+
+def get_myfeatures(features: typing.Optional[dict]) -> str:
+    """
+    Return the value of myfeatures for the given crate list
+    """
+    if not features:
+        return ""
+    return "\n".join(sorted(f"\t\t$(usev {feature})"
+                     for feature in features
+                     if feature != "default"))
 
 
 def get_GIT_CRATES(crates: typing.Iterable[Crate],
@@ -211,15 +246,22 @@ def get_ebuild(pkg_meta: PackageMetadata,
                crate_license: bool = True,
                crate_tarball: typing.Optional[Path] = None,
                license_overrides: typing.Dict[str, str] = {},
+               use_features: bool = False,
                ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
     """
 
     template = EBUILD_TEMPLATE_START
+    iuse = get_IUSE(pkg_meta.features)
     if crate_license:
         template += EBUILD_TEMPLATE_CRATE_LICENSE
+    if use_features and iuse:
+        template += EBUILD_TEMPLATE_FEATURES
     template += EBUILD_TEMPLATE_END
+
+    if use_features and iuse:
+        template += EBUILD_TEMPLATE_SRC_CONFIGURE
 
     return template.format(
         crates=get_CRATES(crates if crate_tarball is None else ()),
@@ -230,6 +272,8 @@ def get_ebuild(pkg_meta: PackageMetadata,
         opt_crate_tarball=EBUILD_TEMPLATE_CRATE_TARBALL.format(
             crate_tarball.name) if crate_tarball is not None else "",
         opt_git_crates=get_GIT_CRATES(crates, distdir),
+        pkg_features=iuse,
+        pkg_features_use=get_myfeatures(pkg_meta.features),
         pkg_license=get_package_LICENSE(pkg_meta.license),
         prog_version=__version__,
         year=datetime.date.today().year)
