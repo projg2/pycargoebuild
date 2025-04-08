@@ -89,13 +89,20 @@ def get_CRATES(crates: typing.Iterable[Crate],
 
 def get_IUSE(features: typing.Optional[dict]) -> str:
     """
-    Return the value of IUSE for the given crate list
+    Return the IUSE string for the given features dictionary.
     """
     if features is None:
         return ""
-    return "".join(sorted(f"{feature} "
-                          for feature in features.keys()
-                          if feature != "default"))
+
+    default_features = features.get("default", [])
+
+    non_default_features = sorted(f"{feature} "
+                                  for feature in features.keys()
+                                  if feature != "default" and feature not in default_features)
+
+    default_features_str = " ".join(f"+{feature}" for feature in default_features)
+
+    return (default_features_str + " " + ''.join(non_default_features)).strip()
 
 def get_myfeatures(features: typing.Optional[dict]) -> str:
     """
