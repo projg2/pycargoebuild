@@ -58,7 +58,7 @@ def main(prog_name: str, *argv: str) -> int:
                            "adding them to the CRATES variable")
     argp.add_argument("-e", "--features",
                       action="store_true",
-                      help="Add features support to the ebuild")
+                      help="Add USE flags for Cargo features")
     argp.add_argument("--crate-tarball-path",
                       default="{distdir}/{name}-{version}-crates.tar.xz",
                       help="Path to write crate tarball to (default: "
