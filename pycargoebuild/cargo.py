@@ -302,7 +302,7 @@ def get_package_metadata(f: typing.BinaryIO,
         name=pkg_meta["name"],
         version=pkg_version,
         license=pkg_license,
-        features=pkg_features,
+        features=cargo_toml.get("features", {}),
         license_file=_get_meta_key("license-file"),
         description=_get_meta_key("description"),
         homepage=_get_meta_key("homepage"))
