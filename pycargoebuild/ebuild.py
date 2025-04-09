@@ -255,14 +255,14 @@ def get_ebuild(pkg_meta: PackageMetadata,
     """
 
     template = EBUILD_TEMPLATE_START
+    iuse = get_IUSE(pkg_meta.features)
     if crate_license:
         template += EBUILD_TEMPLATE_CRATE_LICENSE
-    if features:
+    if use_features and iuse:
         template += EBUILD_TEMPLATE_FEATURES
     template += EBUILD_TEMPLATE_END
 
-    iuse = get_IUSE(pkg_meta.features)
-    if iuse and features:
+    if use_features and iuse:
         template += EBUILD_TEMPLATE_SRC_CONFIGURE
 
     return template.format(
