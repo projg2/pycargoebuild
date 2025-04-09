@@ -99,13 +99,8 @@ def get_IUSE(features: typing.Optional[dict]) -> str:
 
     default_features = features.get("default", [])
 
-    non_default_features = sorted(f"{feature} "
-                                  for feature in features.keys()
-                                  if feature != "default" and feature not in default_features)
-
-    default_features_str = " ".join(f"+{feature}" for feature in default_features)
-
-    return (default_features_str + " " + ''.join(non_default_features)).strip()
+    all_features = sorted(x for x in features if x != "default")
+    return " ".join(f"+{x}" if x in default_features else x for x in all_features)
 
 def get_myfeatures(features: typing.Optional[dict]) -> str:
     """
