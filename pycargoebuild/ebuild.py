@@ -262,7 +262,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
     template += EBUILD_TEMPLATE_END
 
     iuse = get_IUSE(pkg_meta.features)
-    if pkg_meta.features and iuse and features:
+    if iuse and features:
         template += EBUILD_TEMPLATE_SRC_CONFIGURE
 
     return template.format(
