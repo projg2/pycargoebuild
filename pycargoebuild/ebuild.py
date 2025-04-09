@@ -97,7 +97,7 @@ def get_IUSE(features: typing.Optional[dict]) -> str:
     if features is None:
         return ""
 
-    default_features = features.get("default", [])
+    default_features = frozenset(features.get("default", []))
 
     all_features = sorted(x for x in features if x != "default")
     return " ".join(f"+{x}" if x in default_features else x for x in all_features)
