@@ -274,7 +274,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
         opt_crate_tarball=EBUILD_TEMPLATE_CRATE_TARBALL.format(
             crate_tarball.name) if crate_tarball is not None else "",
         opt_git_crates=get_GIT_CRATES(crates, distdir),
-        pkg_features=get_IUSE(pkg_meta.features),
+        pkg_features=iuse,
         pkg_features_use=get_myfeatures(pkg_meta.features),
         pkg_license=get_package_LICENSE(pkg_meta.license),
         prog_version=__version__,
