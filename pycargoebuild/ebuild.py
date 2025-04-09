@@ -248,7 +248,7 @@ def get_ebuild(pkg_meta: PackageMetadata,
                crate_license: bool = True,
                crate_tarball: typing.Optional[Path] = None,
                license_overrides: typing.Dict[str, str] = {},
-               features: bool,
+               use_features: bool,
                ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
