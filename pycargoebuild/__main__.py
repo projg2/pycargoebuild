@@ -59,9 +59,6 @@ def main(prog_name: str, *argv: str) -> int:
     argp.add_argument("-e", "--features",
                       action="store_true",
                       help="Add USE flags for Cargo features")
-    argp.add_argument("-ne", "--no-default-features",
-                      action="store_false",
-                      help="Don't add default Cargo features to USE flags")
     argp.add_argument("--crate-tarball-path",
                       default="{distdir}/{name}-{version}-crates.tar.xz",
                       help="Path to write crate tarball to (default: "
@@ -384,8 +381,7 @@ def main(prog_name: str, *argv: str) -> int:
                 crate_tarball=crate_tarball if args.crate_tarball else None,
                 license_overrides=config_toml.get("license-overrides", {}),
                 use_features=args.features,
-                use_default_features=args.no_default_features,
-            )
+                )
     except UnmatchedLicense as e:
         logging.error(
             f"The license {e.license_key!r} did not match any entry in "
