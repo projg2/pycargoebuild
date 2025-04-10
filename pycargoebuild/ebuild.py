@@ -90,7 +90,7 @@ def get_CRATES(crates: typing.Iterable[Crate],
                              if isinstance(c, FileCrate))) +
             "\n")
 
-def get_IUSE(features: typing.Optional[dict]) -> str:
+def get_IUSE(features: typing.Optional[dict], use_default_features: bool) -> str:
     """
     Return the IUSE string for the given features dictionary.
     """
@@ -100,7 +100,9 @@ def get_IUSE(features: typing.Optional[dict]) -> str:
     default_features = frozenset(features.get("default", []))
 
     all_features = sorted(x for x in features if x != "default")
-    return " ".join(f"+{x}" if x in default_features else x for x in all_features)
+    if use_default_features:
+        return " ".join(f"+{x}" if x in default_features else x for x in all_features)
+    return " ".join(all_features)
 
 def get_myfeatures(features: typing.Optional[dict]) -> str:
     """
@@ -243,14 +245,15 @@ def get_ebuild(pkg_meta: PackageMetadata,
                crate_license: bool = True,
                crate_tarball: typing.Optional[Path] = None,
                license_overrides: typing.Dict[str, str] = {},
-               use_features: bool,
+               use_features: bool = False,
+               use_default_features: bool = True,
                ) -> str:
     """
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
     """
 
     template = EBUILD_TEMPLATE_START
-    iuse = get_IUSE(pkg_meta.features)
+    iuse = get_IUSE(pkg_meta.features, use_default_features)
     if crate_license:
         template += EBUILD_TEMPLATE_CRATE_LICENSE
     if use_features and iuse:
