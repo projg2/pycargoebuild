@@ -70,7 +70,7 @@ KEYWORDS="~amd64"
 
 EBUILD_TEMPLATE_SRC_CONFIGURE = """
 src_configure() {{
-\tlocal myfeatures=({pkg_features_use})
+\tlocal myfeatures=({pkg_features_use}\n\t)
 \tcargo_src_configure
 }}
 """
@@ -108,7 +108,7 @@ def get_myfeatures(features: typing.Optional[dict]) -> str:
     """
     if features is None:
         return ""
-    return "\n"+"\n".join(sorted(f"\t$(usev {feature})"
+    return "\n"+"\n".join(sorted(f"\t\t$(usev {feature})"
                           for feature in features.keys()
                           if feature != "default"))
 
