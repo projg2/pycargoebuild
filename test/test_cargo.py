@@ -120,7 +120,7 @@ def test_get_package_metadata(exclude):
             input_toml += f'{k} = "{v}"\n'
 
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
-            PackageMetadata(**data))  # type: ignore
+            PackageMetadata(**data, features={}))  # type: ignore
 
 
 @pytest.mark.parametrize("exclude", ["", "description", "homepage", "license"])
@@ -143,7 +143,7 @@ def test_get_package_metadata_workspace(exclude):
     data["name"] = "test"
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8")),
                                  data) ==
-            PackageMetadata(**data))  # type: ignore
+            PackageMetadata(**data, features={}))  # type: ignore
 
 
 def test_get_package_metadata_license_file():
@@ -157,8 +157,28 @@ def test_get_package_metadata_license_file():
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
             PackageMetadata(name="test",
                             version="0",
+                            features={},
                             license_file="COPYING"))
 
+
+def test_get_package_metadata_features():
+    input_toml = """
+        [package]
+        name = "test"
+        version = "0"
+        license-file = "COPYING"
+
+        [features]
+        default = ["foo"]
+        foo = ["bar"]
+        bar = []
+    """
+
+    assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
+            PackageMetadata(name="test",
+                            version="0",
+                            features={"default": ["foo"], "foo": ["bar"], "bar": []},
+                            license_file="COPYING"))
 
 TOP_CARGO_TOML = b"""\
 [package]
