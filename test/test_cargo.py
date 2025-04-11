@@ -120,7 +120,7 @@ def test_get_package_metadata(exclude):
             input_toml += f'{k} = "{v}"\n'
 
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
-            PackageMetadata(**data, features={}))  # type: ignore
+            PackageMetadata(**data))  # type: ignore
 
 
 @pytest.mark.parametrize("exclude", ["", "description", "homepage", "license"])
@@ -143,7 +143,7 @@ def test_get_package_metadata_workspace(exclude):
     data["name"] = "test"
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8")),
                                  data) ==
-            PackageMetadata(**data, features={}))  # type: ignore
+            PackageMetadata(**data))  # type: ignore
 
 
 def test_get_package_metadata_license_file():
@@ -157,7 +157,6 @@ def test_get_package_metadata_license_file():
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
             PackageMetadata(name="test",
                             version="0",
-                            features={},
                             license_file="COPYING"))
 
 

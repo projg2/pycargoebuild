@@ -140,6 +140,7 @@ def test_get_ebuild(real_license_mapping, pkg_meta, crate_dir, crates):
         KEYWORDS="~amd64"
     """)
 
+
 def test_get_ebuild_features(real_license_mapping, crate_dir, crates):
     pkg_meta = PackageMetadata(name="foo", version="1.2.3", features={"default": ["foo"], "foo": ["bar"], "bar": []})
     assert get_ebuild(pkg_meta, crates, crate_dir, use_features=True) == textwrap.dedent(f"""\
@@ -184,6 +185,7 @@ def test_get_ebuild_features(real_license_mapping, crate_dir, crates):
         }}
         """)
 
+
 def test_get_ebuild_no_features(real_license_mapping, crate_dir, crates):
     pkg_meta = PackageMetadata(name="foo", version="1.2.3", features={"default": ["foo"], "foo": ["bar"], "bar": []})
     assert get_ebuild(pkg_meta, crates, crate_dir, use_features=False) == textwrap.dedent(f"""\
@@ -219,6 +221,7 @@ def test_get_ebuild_no_features(real_license_mapping, crate_dir, crates):
         KEYWORDS="~amd64"
     """)
 
+
 def test_get_ebuild_empty_features(real_license_mapping, pkg_meta, crate_dir, crates):
     assert get_ebuild(pkg_meta, crates, crate_dir, use_features=True) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
@@ -252,6 +255,7 @@ def test_get_ebuild_empty_features(real_license_mapping, pkg_meta, crate_dir, cr
         SLOT="0"
         KEYWORDS="~amd64"
     """)
+
 
 def test_get_ebuild_no_license(real_license_mapping, crate_dir, crates):
     pkg_meta = PackageMetadata(name="foo", version="1.2.3")
