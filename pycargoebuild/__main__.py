@@ -368,7 +368,7 @@ def main(prog_name: str, *argv: str) -> int:
                 crate_license=not args.no_license,
                 crate_tarball=crate_tarball if args.crate_tarball else None,
                 license_overrides=config_toml.get("license-overrides", {}),
-            )
+                )
             logging.warning(
                 "The in-place mode updates CRATES, GIT_CRATES and crate "
                 "LICENSE+= variables only, other metadata is left unchanged")
