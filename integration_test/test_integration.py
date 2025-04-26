@@ -27,6 +27,13 @@ class Package(typing.NamedTuple):
 
 
 PACKAGES = {
+    "alass-2.0.0.ebuild": Package(
+        url="https://github.com/kaegi/alass/archive/refs/tags/v2.0.0.tar.gz",
+        checksum="ce88f92c7a427b623edcabb1b64e80be"
+                 "70cca2777f3da4b96702820a6cdf1e26",
+        directories=["alass-2.0.0/alass-cli",
+                     "alass-2.0.0/alass-core"],
+        expected_filename="alass-cli-2.0.0.ebuild"),
     "attest-0.1.0.ebuild": Package(
         url="https://github.com/signalapp/libsignal/archive/v0.38.0.tar.gz",
         checksum="2e31240d41fc31105b3ee9d8c2e0492e"

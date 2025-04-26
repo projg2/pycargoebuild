@@ -226,7 +226,8 @@ def cargo_to_spdx(license_str: str) -> str:
 def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
     """Read crate list from the open ``Cargo.lock`` file"""
     cargo_lock = tomllib.load(f)
-    if cargo_lock["version"] not in (3, 4):
+    lock_version = cargo_lock.get("version", None)
+    if lock_version not in (None, 3, 4):
         raise NotImplementedError(
             f"Cargo.lock version '{cargo_lock['version']} unsupported")
 
@@ -237,9 +238,15 @@ def get_crates(f: typing.BinaryIO) -> typing.Generator[Crate, None, None]:
 
         try:
             if p["source"] == CRATE_REGISTRY:
+                if lock_version is None:
+                    checksum = cargo_lock["metadata"][
+                        f"checksum {p['name']} {p['version']} "
+                        f"({p['source']})"]
+                else:
+                    checksum = p["checksum"]
                 yield FileCrate(name=p["name"],
                                 version=p["version"],
-                                checksum=p["checksum"])
+                                checksum=checksum)
             elif p["source"].startswith("git+"):
                 parsed_url = urllib.parse.urlsplit(p["source"])
                 if not parsed_url.fragment:
