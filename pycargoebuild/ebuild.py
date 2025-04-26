@@ -42,7 +42,15 @@ DESCRIPTION="{{description}}"
 HOMEPAGE="{{homepage}}"
 SRC_URI="
 \t${CARGO_CRATE_URIS}
-"{{opt_crate_tarball}}
+"
+{% if opt_crate_tarball %}
+if [[ ${PKGBUMPING} != ${PVR} ]]; then
+\tSRC_URI+="
+\t\t{{opt_crate_tarball}}
+\t"
+fi\
+
+{% endif %}
 
 LICENSE="{{pkg_license}}"
 {% if crate_licenses is not none %}
@@ -63,14 +71,6 @@ src_configure() {
 \tcargo_src_configure
 }
 {% endif %}
-"""
-
-EBUILD_TEMPLATE_CRATE_TARBALL = """
-if [[ ${{PKGBUMPING}} != ${{PVR}} ]]; then
-\tSRC_URI+="
-\t\t{}
-\t"
-fi\
 """
 
 
@@ -255,8 +255,8 @@ def get_ebuild(pkg_meta: PackageMetadata,
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
-        opt_crate_tarball=EBUILD_TEMPLATE_CRATE_TARBALL.format(
-            crate_tarball.name) if crate_tarball is not None else "",
+        opt_crate_tarball=(crate_tarball.name
+                           if crate_tarball is not None else None),
         opt_git_crates=get_GIT_CRATES(crates, distdir),
         pkg_features=(get_IUSE(pkg_meta.features)
                       if use_features and pkg_meta.features else None),
