@@ -7,8 +7,9 @@ _pycargoebuild() {
     _get_comp_words_by_ref cur prev
 
     local OPTS=(
-        -h --help -c --crate-tarball --crate-tarball-path --crate-tarball-prefix
-        -d --distdir -f --force -F --fetcher -i --input --inplace --no-config
+        -h --help -c --crate-tarball -e --features --crate-tarball-path
+        --crate-tarball-prefix --no-write-crate-tarball -d --distdir
+        -f --force -F --fetcher -i --input --inplace --no-config
         -l --license-mapping -L --no-license -M --no-manifest -o --output
     )
 
