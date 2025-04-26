@@ -168,15 +168,26 @@ def test_get_package_metadata_features():
         license-file = "COPYING"
 
         [features]
-        default = ["foo"]
-        foo = ["bar"]
-        bar = []
+        default = ["a", "c", "f"]
+        a = ["foo"]
+        b = ["bar", "baz"]
+        c = []
+        d = ["foo", "baz"]
+        e = []
+        f = ["foo", "bar"]
     """
 
     assert (get_package_metadata(io.BytesIO(input_toml.encode("utf-8"))) ==
             PackageMetadata(name="test",
                             version="0",
-                            features={"default": ["foo"], "foo": ["bar"], "bar": []},
+                            features={
+                                "a": True,
+                                "b": False,
+                                "c": True,
+                                "d": False,
+                                "e": False,
+                                "f": True,
+                            },
                             license_file="COPYING"))
 
 

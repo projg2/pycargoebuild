@@ -91,28 +91,21 @@ def get_CRATES(crates: typing.Iterable[Crate],
             "\n")
 
 
-def get_IUSE(features: typing.Optional[dict]) -> str:
+def get_IUSE(features: dict[str, bool]) -> str:
     """
     Return the IUSE string for the given features dictionary.
     """
-    if not features:
-        return ""
-
-    default_features = frozenset(features.get("default", []))
-    all_features = sorted(x for x in features if x != "default")
     return " ".join(
-        f"+{x}" if x in default_features else x for x in all_features)
+        f"+{name}" if is_def else name
+        for name, is_def in sorted(features.items()))
 
 
-def get_myfeatures(features: typing.Optional[dict]) -> str:
+def get_myfeatures(features: dict[str, bool]) -> str:
     """
     Return the value of myfeatures for the given crate list
     """
-    if not features:
-        return ""
-    return "\n".join(sorted(f"\t\t$(usev {feature})"
-                     for feature in features
-                     if feature != "default"))
+    return "\n".join(f"\t\t$(usev {feature})"
+                     for feature in sorted(features))
 
 
 def get_GIT_CRATES(crates: typing.Iterable[Crate],

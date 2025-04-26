@@ -112,9 +112,7 @@ def test_get_ebuild(real_license_mapping,
                     crate_dir,
                     crates,
                     use_features: bool):
-    assert get_ebuild(pkg_meta,
-                      crates,
-                      crate_dir,
+    assert get_ebuild(pkg_meta, crates, crate_dir,
                       use_features=use_features) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
         # Distributed under the terms of the GNU General Public License v2
@@ -153,9 +151,10 @@ def test_get_ebuild_features(real_license_mapping, crate_dir, crates):
     pkg_meta = PackageMetadata(
         name="foo",
         version="1.2.3",
-        features={"default": ["foo"], "foo": ["bar"], "bar": []}
+        features={"foo": True, "bar": False}
     )
-    assert get_ebuild(pkg_meta, crates, crate_dir, use_features=True) == textwrap.dedent(f"""\
+    assert get_ebuild(pkg_meta, crates, crate_dir,
+                      use_features=True) == textwrap.dedent(f"""\
         # Copyright {datetime.date.today().year} Gentoo Authors
         # Distributed under the terms of the GNU General Public License v2
 
@@ -202,7 +201,7 @@ def test_get_ebuild_no_features(real_license_mapping, crate_dir, crates):
     pkg_meta = PackageMetadata(
         name="foo",
         version="1.2.3",
-        features={"default": ["foo"], "foo": ["bar"], "bar": []}
+        features={"foo": True, "bar": False}
     )
     assert get_ebuild(pkg_meta, crates, crate_dir, use_features=False
                       ) == textwrap.dedent(f"""\

@@ -191,7 +191,7 @@ class GitCrate(Crate):
 class PackageMetadata(typing.NamedTuple):
     name: str
     version: str
-    features: typing.Optional[dict[str, list[str]]] = None
+    features: dict[str, bool] = {}
     license: typing.Optional[str] = None
     license_file: typing.Optional[str] = None
     description: typing.Optional[str] = None
@@ -201,6 +201,7 @@ class PackageMetadata(typing.NamedTuple):
                               ) -> "PackageMetadata":
         return PackageMetadata(name=self.name,
                                version=self.version,
+                               features=self.features,
                                license=new_license,
                                license_file=None,
                                description=self.description,
@@ -296,11 +297,15 @@ def get_package_metadata(f: typing.BinaryIO,
     if pkg_version is None:
         raise ValueError(f"No version found in {f.name}")
 
+    features = cargo_toml.get("features", {})
+    default_features = features.pop("default", [])
+    assert set(default_features).issubset(features)
+
     return PackageMetadata(
         name=pkg_meta["name"],
         version=pkg_version,
         license=pkg_license,
-        features=cargo_toml.get("features"),
+        features={name: name in default_features for name in features},
         license_file=_get_meta_key("license-file"),
         description=_get_meta_key("description"),
         homepage=_get_meta_key("homepage"))
