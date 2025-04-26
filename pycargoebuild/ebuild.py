@@ -57,12 +57,10 @@ LICENSE="{{pkg_license}}"
 # Dependent crate licenses
 LICENSE+="{{crate_licenses}}"
 {% endif %}
-{% if pkg_features is not none %}
-IUSE="{{pkg_features}}"
-{% endif %}
 SLOT="0"
 KEYWORDS="~amd64"
-{% if pkg_features_use is not none %}
+{% if pkg_features is not none %}
+IUSE="{{pkg_features}}"
 
 src_configure() {
 \tlocal myfeatures=(

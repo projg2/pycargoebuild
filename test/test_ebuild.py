@@ -183,9 +183,9 @@ def test_get_ebuild_features(real_license_mapping, crate_dir, crates):
         \t|| ( BSD MIT )
         \t|| ( CC0-1.0 Unlicense )
         "
-        IUSE="bar +foo"
         SLOT="0"
         KEYWORDS="~amd64"
+        IUSE="bar +foo"
 
         src_configure() {{
         \tlocal myfeatures=(
