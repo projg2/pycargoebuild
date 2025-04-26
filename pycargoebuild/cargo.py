@@ -299,7 +299,6 @@ def get_package_metadata(f: typing.BinaryIO,
 
     features = cargo_toml.get("features", {})
     default_features = features.pop("default", [])
-    assert set(default_features).issubset(features)
 
     return PackageMetadata(
         name=pkg_meta["name"],
