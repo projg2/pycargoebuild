@@ -4,4 +4,4 @@
 
 """A generator for Rust/Cargo ebuilds written in Python"""
 
-__version__ = "0.14.0"
+__version__ = "0.15.0"
