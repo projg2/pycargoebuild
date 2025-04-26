@@ -24,6 +24,7 @@ class Package(typing.NamedTuple):
     uses_license_file: bool = False
     uses_licenseref: bool = False
     uses_plus_fallback: bool = False
+    use_features: bool = False
 
 
 PACKAGES = {
@@ -53,7 +54,8 @@ PACKAGES = {
             "blake3-0.3.3.tar.gz",
         checksum="0a78908b6299fd21dd46eb00fa4592b2"
                  "59ee419d586d545a3b86e1f2e4d0ee6d",
-        directories=["blake3-0.3.3"]),
+        directories=["blake3-0.3.3"],
+        use_features=True),
     "cryptography-38.0.3.ebuild": Package(
         url="https://files.pythonhosted.org/packages/13/dd/"
             "a9608b7aebe5d2dc0c98a4b2090a6b815628efa46cc1c046b89d8cd25f4c/"
@@ -61,7 +63,8 @@ PACKAGES = {
         checksum="bfbe6ee19615b07a98b1d2287d6a6073"
                  "f734735b49ee45b11324d85efc4d5cbd",
         directories=["cryptography-38.0.3/src/rust"],
-        expected_filename="cryptography-rust-0.1.0.ebuild"),
+        expected_filename="cryptography-rust-0.1.0.ebuild",
+        use_features=True),
     "fractal-5.0.0.ebuild": Package(
         url="https://gitlab.gnome.org/GNOME/fractal/-/archive/5/"
             "fractal-5.tar.gz",
@@ -75,7 +78,8 @@ PACKAGES = {
         checksum="dff7ce501cade3aed2427268d48a27ea"
                  "646159b3e6293db6ff0b78ef46ecba0d",
         directories=["lemmy-0.18.0"],
-        uses_license_file=True),
+        uses_license_file=True,
+        use_features=True),
     "mdbook-linkcheck-0.7.7.ebuild": Package(
         url="https://github.com/Michael-F-Bryan/mdbook-linkcheck/archive/"
             "v0.7.7.tar.gz",
@@ -169,7 +173,8 @@ PACKAGES = {
                  "08d13269b86b8e22d2ba73da9c93a0ae",
         directories=["news_flash_gtk-v.3.3.4"],
         has_crates_without_license=True,
-        uses_license_file=True),
+        uses_license_file=True,
+        use_features=True),
 }
 
 
@@ -216,6 +221,8 @@ def test_integration(tmp_path, capfd, caplog, ebuild):
             "--no-config"]
     if not pkg_info.crate_license:
         args.append("-L")
+    if pkg_info.use_features:
+        args.append("-e")
     args += [str(tmp_path / directory) for directory in pkg_info.directories]
 
     assert main("test", *args) == 0

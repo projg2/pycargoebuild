@@ -605,3 +605,12 @@ LICENSE+="
 "
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="console embed-pictrs"
+
+src_configure() {
+	local myfeatures=(
+		$(usev console)
+		$(usev embed-pictrs)
+	)
+	cargo_src_configure
+}

@@ -79,3 +79,11 @@ LICENSE+="
 "
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="neon"
+
+src_configure() {
+	local myfeatures=(
+		$(usev neon)
+	)
+	cargo_src_configure
+}

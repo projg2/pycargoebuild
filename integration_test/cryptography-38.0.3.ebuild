@@ -75,3 +75,11 @@ LICENSE=""
 LICENSE+=" Apache-2.0 BSD-2 BSD MIT Unicode-DFS-2016"
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="+extension-module"
+
+src_configure() {
+	local myfeatures=(
+		$(usev extension-module)
+	)
+	cargo_src_configure
+}
