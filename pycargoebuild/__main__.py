@@ -216,14 +216,16 @@ def main(prog_name: str, *argv: str) -> int:
                       crates: typing.Set[Crate],
                       ) -> None:
         prefix = args.crate_tarball_prefix
+        start_time = datetime.datetime.now(tz=datetime.timezone.utc)
         interval = datetime.timedelta(seconds=10)
-        next_ping = datetime.datetime.now() + interval
+        next_ping = start_time + interval
         for crate_no, crate in enumerate(sorted(crates,
                                                 key=lambda x: x.filename)):
-            if datetime.datetime.now() > next_ping:
+            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            if now > next_ping:
                 logging.info(
                     f"Processed {crate_no} out of {len(crates)} crates")
-                next_ping = datetime.datetime.now() + interval
+                next_ping = now + interval
             if isinstance(crate, FileCrate):
                 with tarfile.open(args.distdir / crate.filename,
                                   "r:gz") as tar_in:
@@ -250,6 +252,8 @@ def main(prog_name: str, *argv: str) -> int:
                     checksum_info.mode = 0o644
                     tar_out.addfile(checksum_info,
                                     io.BytesIO(checksum_data.encode()))
+        end_time = datetime.datetime.now(tz=datetime.timezone.utc)
+        logging.info(f"Time elapsed during repacking: {end_time - start_time}")
 
     crates: typing.Set[Crate] = set()
     pkg_metas = []
