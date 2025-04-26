@@ -26,7 +26,7 @@ from pycargoebuild.cargo import (
 from pycargoebuild.format import format_license_var
 from pycargoebuild.license import UnmatchedLicense, spdx_to_ebuild
 
-EBUILD_TEMPLATE_START = """\
+EBUILD_TEMPLATE = """\
 # Copyright {{year}} Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
@@ -45,6 +45,24 @@ SRC_URI="
 "{{opt_crate_tarball}}
 
 LICENSE="{{pkg_license}}"
+{% if crate_licenses is not none %}
+# Dependent crate licenses
+LICENSE+="{{crate_licenses}}"
+{% endif %}
+{% if pkg_features is not none %}
+IUSE="{{pkg_features}}"
+{% endif %}
+SLOT="0"
+KEYWORDS="~amd64"
+{% if pkg_features_use is not none %}
+
+src_configure() {
+\tlocal myfeatures=(
+{{pkg_features_use}}
+\t)
+\tcargo_src_configure
+}
+{% endif %}
 """
 
 EBUILD_TEMPLATE_CRATE_TARBALL = """
@@ -53,29 +71,6 @@ if [[ ${{PKGBUMPING}} != ${{PVR}} ]]; then
 \t\t{}
 \t"
 fi\
-"""
-
-EBUILD_TEMPLATE_CRATE_LICENSE = """\
-# Dependent crate licenses
-LICENSE+="{{crate_licenses}}"
-"""
-
-EBUILD_TEMPLATE_FEATURES = """\
-IUSE="{{pkg_features}}"
-"""
-
-EBUILD_TEMPLATE_END = """\
-SLOT="0"
-KEYWORDS="~amd64"
-"""
-
-EBUILD_TEMPLATE_SRC_CONFIGURE = """
-src_configure() {
-\tlocal myfeatures=(
-{{pkg_features_use}}
-\t)
-\tcargo_src_configure
-}
 """
 
 
@@ -248,32 +243,25 @@ def get_ebuild(pkg_meta: PackageMetadata,
     Get ebuild contents for passed contents of Cargo.toml and Cargo.lock.
     """
 
-    jinja_env = jinja2.Environment(keep_trailing_newline=True)
-
-    template = EBUILD_TEMPLATE_START
-    iuse = get_IUSE(pkg_meta.features)
-    if crate_license:
-        template += EBUILD_TEMPLATE_CRATE_LICENSE
-    if use_features and iuse:
-        template += EBUILD_TEMPLATE_FEATURES
-    template += EBUILD_TEMPLATE_END
-
-    if use_features and iuse:
-        template += EBUILD_TEMPLATE_SRC_CONFIGURE
-
+    jinja_env = jinja2.Environment(keep_trailing_newline=True,
+                                   trim_blocks=True)
+    template = EBUILD_TEMPLATE
     compiled_template = jinja_env.from_string(template)
 
     return compiled_template.render(
         crates=get_CRATES(crates if crate_tarball is None else ()),
-        crate_licenses=get_crate_LICENSE(crates, distdir, license_overrides),
+        crate_licenses=(get_crate_LICENSE(crates, distdir, license_overrides)
+                        if crate_license else None),
         description=bash_dquote_escape(collapse_whitespace(
             pkg_meta.description or "")),
         homepage=url_dquote_escape(pkg_meta.homepage or ""),
         opt_crate_tarball=EBUILD_TEMPLATE_CRATE_TARBALL.format(
             crate_tarball.name) if crate_tarball is not None else "",
         opt_git_crates=get_GIT_CRATES(crates, distdir),
-        pkg_features=iuse,
-        pkg_features_use=get_myfeatures(pkg_meta.features),
+        pkg_features=(get_IUSE(pkg_meta.features)
+                      if use_features and pkg_meta.features else None),
+        pkg_features_use=(get_myfeatures(pkg_meta.features)
+                          if use_features and pkg_meta.features else None),
         pkg_license=get_package_LICENSE(pkg_meta.license),
         prog_version=__version__,
         year=datetime.date.today().year)
